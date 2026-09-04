@@ -1,33 +1,30 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
-from database import *
+from fastapi import FastAPI
+
+from exceptions import *
 from models import *
 from cost_engine import itemized_estimate
 from retrieval import get_material_prices, get_labor_rates, get_land_prices, get_permits
 from confidence import confidence_score
 from pdf_export import generate_pdf
 from feedback import submit_feedback
-from auth import (
-    hash_password, verify_password, create_token, decode_token, get_current_user, get_current_admin
-)
+from auth import *
 from datetime import timedelta
 from schemas import *
-
+from error_handlers import register_error_handlers
 
 
 app = FastAPI()
+register_error_handlers(app)
 
 
-
-# ---------------------------
-# AUTH ENDPOINTS
-# ---------------------------
+@app.get("/", tags=["Authentication"])
+async def root():
+    return {"message": "Welcome to Land Price API"}
 
 @app.post("/admin/register", include_in_schema=False, tags=["Authentication"])
 async def register_admin(
     admin: AdminCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_admin)
 ):
     existing_user = db.query(User).filter(User.username == admin.username).first()
     if existing_user:
@@ -95,21 +92,51 @@ async def logout(user: str = Depends(get_current_user)):
         "message": "Logout successful. Please discard your tokens."
     }
 
+@app.post("/land_prices", tags=["ADMIN'S ONLY"])
+async def create_land_price(land: LandPriceCreate, db: Session = Depends(get_db),
+                            current_admin: User = Depends(get_current_admin)):
+    new_land = LandPrice(**land.dict())
+    db.add(new_land)
+    db.commit()
+    db.refresh(new_land)
+    return {"message": "Land price added successfully", "land_price": new_land.id}
 
-@app.post("/refresh", tags=["Authentication"])
-async def refresh(refresh_token: str):
-    payload = decode_token(refresh_token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-    username = payload.get("sub")
-    new_access_token = create_token({"sub": username}, expires_delta=timedelta(minutes=30))
-    return {"access_token": new_access_token}
+@app.post("/permits", tags=["ADMIN'S ONLY"])
+async def create_permit(permit: PermitCreate, db: Session = Depends(get_db),
+                        current_admin: User = Depends(get_current_admin)):
+    new_permit = Permit(**permit.dict())
+    db.add(new_permit)
+    db.commit()
+    db.refresh(new_permit)
+    return {"message": "Permit added successfully", "permit": new_permit.id}
 
-# ---------------------------
-# PROTECTED ROUTES
-# ---------------------------
+@app.post("/materials", tags=["ADMIN'S ONLY"])
+async def create_material(material: MaterialCreate, db: Session = Depends(get_db),
+                          current_admin: User = Depends(get_current_admin)):
+    new_material = Material(**material.dict())
+    db.add(new_material)
+    db.commit()
+    db.refresh(new_material)
+    return {"message": "Material added successfully", "material_id": new_material.id}
+
+@app.post("/labor_rates", tags=["ADMIN'S ONLY"])
+async def create_labor_rate(labor: LaborRateCreate, db: Session = Depends(get_db),
+                            current_admin: User = Depends(get_current_admin)):
+    new_labor = LaborRate(**labor.dict())
+    db.add(new_labor)
+    db.commit()
+    db.refresh(new_labor)
+    return {"message": "Labor rate added successfully", "labor_rate": new_labor.id}
+
+from models import Estimate
+
 @app.post("/estimate")
-async def generate_estimate(request: EstimateRequest, db=Depends(get_db), user: str = Depends(get_current_user)):
+async def generate_estimate(
+    request: EstimateRequest,
+    db=Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    # 1. Compute estimate details
     itemized = itemized_estimate(request.dict(), db)
     sources = {
         "materials": get_material_prices(request.region, db),
@@ -119,8 +146,30 @@ async def generate_estimate(request: EstimateRequest, db=Depends(get_db), user: 
     }
     confidence = confidence_score([s for cat in sources.values() for s in cat])
     disclaimer = "Planning estimate, not certified QS quote"
+
+    # 2. Save to database
+    try:
+        estimate = Estimate(
+            user_input=request.dict(),
+            itemized=itemized,
+            total=sum(itemized.values()) if isinstance(itemized, dict) else sum(itemized),
+            confidence=confidence["level"],
+        )
+        db.add(estimate)
+        db.commit()
+        db.refresh(estimate)
+
+        db.add(estimate)
+        db.commit()
+        db.refresh(estimate)
+    except Exception as e:
+        db.rollback()
+        raise DatabaseError(f"Failed to save estimate: {e}")
+
+    # 3. Return response including DB record ID
     return {
         "user": user,
+        "estimate_id": estimate.id,
         "itemized": itemized,
         "sources": sources,
         "confidence": confidence,
@@ -128,49 +177,18 @@ async def generate_estimate(request: EstimateRequest, db=Depends(get_db), user: 
     }
 
 @app.post("/export")
-async def export_pdf(params: dict, db=Depends(get_db), user: str = Depends(get_current_user)):
+async def export_pdf(params: dict, db=Depends(get_db), user: User = Depends(get_current_user)):
     itemized = itemized_estimate(params, db)
     sources = get_material_prices(params['region'], db)
     filename = generate_pdf(itemized, sources)
     return {"user": user, "pdf_file": filename}
 
 @app.post("/feedback")
-async def feedback(data: dict, db=Depends(get_db), user: str = Depends(get_current_user)):
+async def feedback(data: FeedbackCreate, db=Depends(get_db), user: User = Depends(get_current_user)):
+    result = submit_feedback(db, data.estimate_id, data.actual_cost, data.notes or "")
     return {
-        "user": user,
-        "result": submit_feedback(db, data['estimate_id'], data['actual_cost'], data.get('notes', ""))
+        "user": user.username,
+        "result": result
     }
-
-@app.post("/permits", tags=["ADMIN'S ONLY"])
-async def create_permit(permit: PermitCreate, db: Session = Depends(get_db), user: User = Depends(get_current_admin)):
-    new_permit = Permit(**permit.dict())
-    db.add(new_permit)
-    db.commit()
-    db.refresh(new_permit)
-    return {"message": "Permit added successfully", "permit": new_permit.id}
-
-@app.post("/land_prices", tags=["ADMIN'S ONLY"])
-async def create_land_price(land: LandPriceCreate, db: Session = Depends(get_db), user: str = Depends(get_current_admin)):
-    new_land = LandPrice(**land.dict())
-    db.add(new_land)
-    db.commit()
-    db.refresh(new_land)
-    return {"message": "Land price added successfully", "land_price": new_land.id}
-
-@app.post("/labor_rates", tags=["ADMIN'S ONLY"])
-async def create_labor_rate(labor: LaborRateCreate, db: Session = Depends(get_db), user: User = Depends(get_current_admin)):
-    new_labor = LaborRate(**labor.dict())
-    db.add(new_labor)
-    db.commit()
-    db.refresh(new_labor)
-    return {"message": "Labor rate added successfully", "labor_rate": new_labor.id}
-
-@app.post("/materials", tags=["ADMIN'S ONLY"])
-async def create_material(material: MaterialCreate, db: Session = Depends(get_db), user: User = Depends(get_current_admin)):
-    new_material = Material(**material.dict())
-    db.add(new_material)
-    db.commit()
-    db.refresh(new_material)
-    return {"message": "Material added successfully", "material_id": new_material.id}
 
 
