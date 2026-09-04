@@ -1,0 +1,13 @@
+
+uv add "fastapi[standard]"
+uv add "packageName"
+
+uv run fastapi dev main.py
+
+alembic init alembic
+
+uv run alembic revision --autogenerate -m "initial migration"
+uv run alembic upgrade head
+
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head

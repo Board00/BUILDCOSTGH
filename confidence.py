@@ -1,0 +1,22 @@
+from datetime import datetime
+
+def confidence_score(sources):
+    if not sources:
+        return {"level": "Low", "reason": "No sources found"}
+
+    # Collect only valid dates
+    dates = [s.date for s in sources if getattr(s, "date", None)]
+
+    if not dates:
+        return {"level": "Low", "reason": "No valid dates in sources"}
+
+    latest_date = max(dates)
+    # ✅ both sides are datetime now
+    days_old = (datetime.now() - latest_date).days
+
+    if days_old < 90 and len(sources) >= 3:
+        return {"level": "High", "reason": "Recent data from multiple sources"}
+    elif days_old < 180:
+        return {"level": "Medium", "reason": "Data moderately recent"}
+    else:
+        return {"level": "Low", "reason": "Data outdated"}
