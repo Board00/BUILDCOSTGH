@@ -25,10 +25,10 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return pwd_context.verify(password, hashed)
 
-def create_token(data: dict, expires_delta: timedelta = timedelta(minutes=30)):
+def create_token(data: dict, expires_delta: timedelta = timedelta(minutes=30), token_type: str = "access"):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": token_type})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_token(token: str):
@@ -45,7 +45,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise AuthError("Invalid or expired token")
 
     username = payload.get("sub")
-    if not username:
+    if not username or payload.get("type") != "access":
         raise AuthError("Invalid token payload")
 
     user = db.query(User).filter(User.username == username).first()

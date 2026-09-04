@@ -129,6 +129,7 @@ class BuildingTypeEnum(str, Enum):
 # FINISHING LEVELS
 # -------------------------
 class FinishingEnum(str, Enum):
+    basic = "Basic"
     standard = "Standard"
     premium = "Premium"
     luxury = "Luxury"
@@ -137,10 +138,10 @@ class FinishingEnum(str, Enum):
 # EXTRAS
 # -------------------------
 class ExtraEnum(str, Enum):
-    fence = "Fence",
-    gate = "Gate",
-    borehole = "Borehole",
-    septic_tank = "Septic Tank",
-    garage = "Garage",
-    boys_quarters = "Boys Quarters",
-    solar_system = "Solar System",
+    fence = "Fence"
+    gate = "Gate"
+    borehole = "Borehole"
+    septic_tank = "Septic Tank"
+    garage = "Garage"
+    boys_quarters = "Boys Quarters"
+    solar_system = "Solar System"

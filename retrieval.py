@@ -2,12 +2,15 @@ from sqlalchemy.orm import Session
 from models import Material, LaborRate, LandPrice, Permit
 from exceptions import DatabaseError, ValidationError
 
-def get_material_prices(region: str, db_session: Session):
+def get_material_prices(region: str, db_session: Session, district: str | None = None):
     if not isinstance(region, str):
         raise ValidationError("Region must be a string")
 
     try:
-        results = db_session.query(Material).filter(Material.region == region).all()
+        query = db_session.query(Material).filter(Material.region == region)
+        if district:
+            query = query.filter(Material.district == district)
+        results = query.all()
     except Exception as e:
         raise DatabaseError(f"Failed to retrieve material prices: {e}")
 
@@ -29,12 +32,15 @@ def get_material_prices(region: str, db_session: Session):
     ]
 
 
-def get_labor_rates(region: str, db_session: Session):
+def get_labor_rates(region: str, db_session: Session, district: str | None = None):
     if not isinstance(region, str):
         raise ValidationError("Region must be a string")
 
     try:
-        results = db_session.query(LaborRate).filter(LaborRate.region == region).all()
+        query = db_session.query(LaborRate).filter(LaborRate.region == region)
+        if district:
+            query = query.filter(LaborRate.district == district)
+        results = query.all()
     except Exception as e:
         raise DatabaseError(f"Failed to retrieve labor rates: {e}")
 
@@ -54,12 +60,15 @@ def get_labor_rates(region: str, db_session: Session):
     ]
 
 
-def get_land_prices(district: str, db_session: Session):
+def get_land_prices(district: str, db_session: Session, region: str | None = None):
     if not isinstance(district, str):
         raise ValidationError("District must be a string")
 
     try:
-        results = db_session.query(LandPrice).filter(LandPrice.district == district).all()
+        query = db_session.query(LandPrice).filter(LandPrice.district == district)
+        if region:
+            query = query.filter(LandPrice.region == region)
+        results = query.all()
     except Exception as e:
         raise DatabaseError(f"Failed to retrieve land prices: {e}")
 
@@ -79,12 +88,15 @@ def get_land_prices(district: str, db_session: Session):
     ]
 
 
-def get_permits(region: str, db_session: Session):
+def get_permits(region: str, db_session: Session, district: str | None = None):
     if not isinstance(region, str):
         raise ValidationError("Region must be a string")
 
     try:
-        results = db_session.query(Permit).filter(Permit.region == region).all()
+        query = db_session.query(Permit).filter(Permit.region == region)
+        if district:
+            query = query.filter(Permit.district == district)
+        results = query.all()
     except Exception as e:
         raise DatabaseError(f"Failed to retrieve permits: {e}")
 

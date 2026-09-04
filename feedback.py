@@ -1,5 +1,5 @@
 from exceptions import ValidationError, DatabaseError
-from models import Feedback
+from models import Estimate, Feedback
 
 def submit_feedback(db_session, estimate_id, actual_cost, notes=""):
     if not isinstance(estimate_id, int):
@@ -7,6 +7,12 @@ def submit_feedback(db_session, estimate_id, actual_cost, notes=""):
 
     if not isinstance(actual_cost, (int, float)):
         raise ValidationError("actual_cost must be numeric")
+    if actual_cost <= 0:
+        raise ValidationError("actual_cost must be greater than zero")
+
+    estimate = db_session.query(Estimate).filter(Estimate.id == estimate_id).first()
+    if estimate is None:
+        raise ValidationError("Estimate not found")
 
     try:
         feedback = Feedback(

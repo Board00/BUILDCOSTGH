@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import os
+
+from fastapi import FastAPI, Header
 
 from exceptions import *
 from models import *
@@ -25,7 +27,11 @@ async def root():
 async def register_admin(
     admin: AdminCreate,
     db: Session = Depends(get_db),
+    bootstrap_token: str | None = Header(default=None, alias="X-Bootstrap-Token"),
 ):
+    configured_token = os.getenv("ADMIN_BOOTSTRAP_TOKEN")
+    if not configured_token or bootstrap_token != configured_token:
+        raise HTTPException(status_code=404, detail="Not found")
     existing_user = db.query(User).filter(User.username == admin.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -41,14 +47,9 @@ async def register_admin(
     return {"message": "Admin registered successfully", "admin_id": new_admin.id}
 
 @app.post("/register", tags=["Authentication"])
-async def register(username: str, password: str, db: Session = Depends(get_db)):
-    # Reject overly long passwords
-    if len(password.encode("utf-8")) > 72:
-        raise HTTPException(
-            status_code=400,
-            detail="Password too long. Maximum length is 72 characters."
-        )
-
+async def register(data: RegisterRequest, db: Session = Depends(get_db)):
+    username = data.username
+    password = data.password
     user = db.query(User).filter(User.username == username).first()
     if user:
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -72,16 +73,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
-    refresh_token = create_token({"sub": user.username}, expires_delta=timedelta(days=7))
+    refresh_token = create_token({"sub": user.username}, expires_delta=timedelta(days=7), token_type="refresh")
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 @app.post("/refresh", tags=["Authentication"])
 async def refresh(refresh_token: str):
     payload = decode_token(refresh_token)
-    if not payload:
+    if not payload or payload.get("type") != "refresh" or not payload.get("sub"):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     username = payload.get("sub")
-    new_access_token = create_token({"sub": username}, expires_delta=timedelta(minutes=30))
+    new_access_token = create_token({"sub": username}, expires_delta=timedelta(minutes=30), token_type="access")
     return {"access_token": new_access_token}
 
 @app.post("/logout", tags=["Authentication"])
@@ -137,13 +138,15 @@ async def generate_estimate(
     user: User = Depends(get_current_user)
 ):
     # 1. Compute estimate details
-    itemized = itemized_estimate(request.dict(), db)
+    region = request.region.value
+    district = request.district.value
     sources = {
-        "materials": get_material_prices(request.region, db),
-        "labor": get_labor_rates(request.region, db),
-        "land": get_land_prices(request.district, db),
-        "permits": get_permits(request.region, db)
+        "materials": get_material_prices(region, db, district),
+        "labor": get_labor_rates(region, db, district),
+        "land": get_land_prices(district, db, region),
+        "permits": get_permits(region, db, district)
     }
+    itemized = itemized_estimate(request.model_dump(), db, sources)
     confidence = confidence_score([s for cat in sources.values() for s in cat])
     disclaimer = "Planning estimate, not certified QS quote"
 
@@ -151,13 +154,11 @@ async def generate_estimate(
     try:
         estimate = Estimate(
             user_input=request.dict(),
+            user_id=user.id,
             itemized=itemized,
-            total=sum(itemized.values()) if isinstance(itemized, dict) else sum(itemized),
+            total=itemized["total"],
             confidence=confidence["level"],
         )
-        db.add(estimate)
-        db.commit()
-        db.refresh(estimate)
 
         db.add(estimate)
         db.commit()
@@ -168,7 +169,7 @@ async def generate_estimate(
 
     # 3. Return response including DB record ID
     return {
-        "user": user,
+        "user": user.username,
         "estimate_id": estimate.id,
         "itemized": itemized,
         "sources": sources,
@@ -177,14 +178,24 @@ async def generate_estimate(
     }
 
 @app.post("/export")
-async def export_pdf(params: dict, db=Depends(get_db), user: User = Depends(get_current_user)):
-    itemized = itemized_estimate(params, db)
-    sources = get_material_prices(params['region'], db)
+async def export_pdf(params: EstimateRequest, db=Depends(get_db), user: User = Depends(get_current_user)):
+    region = params.region.value
+    district = params.district.value
+    sources = {
+        "materials": get_material_prices(region, db, district),
+        "labor": get_labor_rates(region, db, district),
+        "land": get_land_prices(district, db, region),
+        "permits": get_permits(region, db, district),
+    }
+    itemized = itemized_estimate(params.model_dump(), db, sources)
     filename = generate_pdf(itemized, sources)
-    return {"user": user, "pdf_file": filename}
+    return {"user": user.username, "pdf_file": filename}
 
 @app.post("/feedback")
 async def feedback(data: FeedbackCreate, db=Depends(get_db), user: User = Depends(get_current_user)):
+    estimate = db.query(Estimate).filter(Estimate.id == data.estimate_id, Estimate.user_id == user.id).first()
+    if estimate is None:
+        raise HTTPException(status_code=404, detail="Estimate not found")
     result = submit_feedback(db, data.estimate_id, data.actual_cost, data.notes or "")
     return {
         "user": user.username,

@@ -50,6 +50,7 @@ class Permit(Base):
 class Estimate(Base):
     __tablename__ = "estimates"
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     user_input = Column(JSON, nullable=False)
     itemized = Column(JSON, nullable=False)
     total = Column(Numeric, nullable=False)
@@ -57,6 +58,7 @@ class Estimate(Base):
     date = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     feedback = relationship("Feedback", back_populates="estimate")
+    user = relationship("User", back_populates="estimates")
 
 
 class User(Base):
@@ -68,6 +70,7 @@ class User(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     saved_estimates = relationship("SavedEstimate", back_populates="user")
+    estimates = relationship("Estimate", back_populates="user")
 
 
 class SavedEstimate(Base):
