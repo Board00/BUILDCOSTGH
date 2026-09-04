@@ -72,6 +72,38 @@ class PermitCreate(BaseModel):
     amount: float = Field(gt=0)
     source: str
 
+
+class MaterialUpdate(BaseModel):
+    region: RegionEnum | None = None
+    district: DistrictEnum | None = None
+    item: MaterialItemEnum | None = None
+    unit: str | None = None
+    price: float | None = Field(default=None, gt=0)
+    source: str | None = None
+
+
+class LaborRateUpdate(BaseModel):
+    region: RegionEnum | None = None
+    district: DistrictEnum | None = None
+    trade: str | None = None
+    rate: float | None = Field(default=None, gt=0)
+    source: str | None = None
+
+
+class LandPriceUpdate(BaseModel):
+    region: RegionEnum | None = None
+    district: DistrictEnum | None = None
+    price: float | None = Field(default=None, gt=0)
+    source: str | None = None
+
+
+class PermitUpdate(BaseModel):
+    region: RegionEnum | None = None
+    district: DistrictEnum | None = None
+    fee_type: str | None = None
+    amount: float | None = Field(default=None, gt=0)
+    source: str | None = None
+
 class FeedbackCreate(BaseModel):
     estimate_id: int
     actual_cost: float = Field(gt=0)
