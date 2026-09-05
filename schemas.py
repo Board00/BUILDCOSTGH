@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
 from constants import *
-# from validators import DistrictValidator
 
 
 class AdminCreate(BaseModel):

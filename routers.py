@@ -60,9 +60,6 @@ def _delete_reference_record(db: Session, record):
     db.commit()
 
 
-
-
-
 @router.post("/admin/register", include_in_schema=False, tags=["Authentication"])
 async def register_admin(
     admin: AdminCreate,
