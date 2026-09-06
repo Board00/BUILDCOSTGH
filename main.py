@@ -82,6 +82,34 @@ async def admin_dashboard_page(
         return RedirectResponse("/login", status_code=303)
     return templates.TemplateResponse(request=request, name="admin_dashboard.html")
 
+
+ADMIN_DATA_PAGES = {
+    "materials": {"title": "Materials", "singular": "material", "description": "Material prices and units"},
+    "permits": {"title": "Permits", "singular": "permit", "description": "Permit fees and sources"},
+    "land_prices": {"title": "Land prices", "singular": "land price", "description": "District land pricing"},
+    "labor_rates": {"title": "Labour rates", "singular": "labour rate", "description": "Local trade rates"},
+}
+
+
+@app.get("/admin/data/{resource}", response_class=HTMLResponse, include_in_schema=False)
+async def admin_data_page(
+    resource: str,
+    request: Request,
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+):
+    user = _get_page_user(access_token, db)
+    page = ADMIN_DATA_PAGES.get(resource)
+    if page is None:
+        return RedirectResponse("/admin/dashboard", status_code=303)
+    if user is None or not user.is_admin:
+        return RedirectResponse("/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_data.html",
+        context={"resource": resource, "page": page},
+    )
+
 # Custom ReDoc page
 
 

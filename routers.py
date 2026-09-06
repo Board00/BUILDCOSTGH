@@ -181,7 +181,7 @@ async def logout(response: Response, user: User = Depends(get_current_user)):
     return {"user": user, "message": "Logout successful. Please discard your tokens."}
 
 
-@router.post("admin/land_prices", tags=["Admin: Land Prices"])
+@router.post("/admin/land_prices", tags=["Admin: Land Prices"])
 async def create_land_price(
     land: LandPriceCreate,
     db: Session = Depends(get_db),
@@ -194,7 +194,7 @@ async def create_land_price(
     return {"message": "Land price added successfully", "land_price": new_land.id}
 
 
-@router.get("admin/land_prices", tags=["Admin: Land Prices"])
+@router.get("/admin/land_prices", tags=["Admin: Land Prices"])
 async def list_land_prices(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin),
@@ -202,7 +202,7 @@ async def list_land_prices(
     return db.query(LandPrice).all()
 
 
-@router.get("admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
+@router.get("/admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
 async def get_land_price(
     land_price_id: int,
     db: Session = Depends(get_db),
@@ -211,7 +211,7 @@ async def get_land_price(
     return _get_reference_record(db, LandPrice, land_price_id, "Land price")
 
 
-@router.patch("admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
+@router.patch("/admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
 async def update_land_price(
     land_price_id: int,
     land: LandPriceUpdate,
@@ -222,7 +222,7 @@ async def update_land_price(
     return _update_reference_record(db, record, land.model_dump(exclude_unset=True))
 
 
-@router.put("admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
+@router.put("/admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
 async def replace_land_price(
     land_price_id: int,
     land: LandPriceCreate,
@@ -233,7 +233,7 @@ async def replace_land_price(
     return _update_reference_record(db, record, land.model_dump())
 
 
-@router.delete("admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
+@router.delete("/admin/land_prices/{land_price_id}", tags=["Admin: Land Prices"])
 async def delete_land_price(
     land_price_id: int,
     db: Session = Depends(get_db),
@@ -244,7 +244,7 @@ async def delete_land_price(
     return {"message": "Land price deleted successfully"}
 
 
-@router.post("admin/permits", tags=["Admin: Permits"])
+@router.post("/admin/permits", tags=["Admin: Permits"])
 async def create_permit(
     permit: PermitCreate,
     db: Session = Depends(get_db),
@@ -257,7 +257,7 @@ async def create_permit(
     return {"message": "Permit added successfully", "permit": new_permit.id}
 
 
-@router.get("admin/permits", tags=["Admin: Permits"])
+@router.get("/admin/permits", tags=["Admin: Permits"])
 async def list_permits(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin),
@@ -265,7 +265,7 @@ async def list_permits(
     return db.query(Permit).all()
 
 
-@router.get("admin/permits/{permit_id}", tags=["Admin: Permits"])
+@router.get("/admin/permits/{permit_id}", tags=["Admin: Permits"])
 async def get_permit(
     permit_id: int,
     db: Session = Depends(get_db),
@@ -274,7 +274,7 @@ async def get_permit(
     return _get_reference_record(db, Permit, permit_id, "Permit")
 
 
-@router.patch("admin/permits/{permit_id}", tags=["Admin: Permits"])
+@router.patch("/admin/permits/{permit_id}", tags=["Admin: Permits"])
 async def update_permit(
     permit_id: int,
     permit: PermitUpdate,
@@ -285,7 +285,7 @@ async def update_permit(
     return _update_reference_record(db, record, permit.model_dump(exclude_unset=True))
 
 
-@router.put("admin/permits/{permit_id}", tags=["Admin: Permits"])
+@router.put("/admin/permits/{permit_id}", tags=["Admin: Permits"])
 async def replace_permit(
     permit_id: int,
     permit: PermitCreate,
@@ -296,7 +296,7 @@ async def replace_permit(
     return _update_reference_record(db, record, permit.model_dump())
 
 
-@router.delete("admin/permits/{permit_id}", tags=["Admin: Permits"])
+@router.delete("/admin/permits/{permit_id}", tags=["Admin: Permits"])
 async def delete_permit(
     permit_id: int,
     db: Session = Depends(get_db),
@@ -307,7 +307,7 @@ async def delete_permit(
     return {"message": "Permit deleted successfully"}
 
 
-@router.post("admin/materials", tags=["Admin: Materials"])
+@router.post("/admin/materials", tags=["Admin: Materials"])
 async def create_material(
     material: MaterialCreate,
     db: Session = Depends(get_db),
@@ -320,7 +320,7 @@ async def create_material(
     return {"message": "Material added successfully", "material_id": new_material.id}
 
 
-@router.get("admin/materials", tags=["Admin: Materials"])
+@router.get("/admin/materials", tags=["Admin: Materials"])
 async def list_materials(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin),
@@ -328,7 +328,7 @@ async def list_materials(
     return db.query(Material).all()
 
 
-@router.get("admin/materials/{material_id}", tags=["Admin: Materials"])
+@router.get("/admin/materials/{material_id}", tags=["Admin: Materials"])
 async def get_material(
     material_id: int,
     db: Session = Depends(get_db),
@@ -337,7 +337,7 @@ async def get_material(
     return _get_reference_record(db, Material, material_id, "Material")
 
 
-@router.patch("admin/materials/{material_id}", tags=["Admin: Materials"])
+@router.patch("/admin/materials/{material_id}", tags=["Admin: Materials"])
 async def update_material(
     material_id: int,
     material: MaterialUpdate,
@@ -348,7 +348,7 @@ async def update_material(
     return _update_reference_record(db, record, material.model_dump(exclude_unset=True))
 
 
-@router.put("admin/materials/{material_id}", tags=["Admin: Materials"])
+@router.put("/admin/materials/{material_id}", tags=["Admin: Materials"])
 async def replace_material(
     material_id: int,
     material: MaterialCreate,
@@ -359,7 +359,7 @@ async def replace_material(
     return _update_reference_record(db, record, material.model_dump())
 
 
-@router.delete("admin/materials/{material_id}", tags=["Admin: Materials"])
+@router.delete("/admin/materials/{material_id}", tags=["Admin: Materials"])
 async def delete_material(
     material_id: int,
     db: Session = Depends(get_db),
@@ -370,7 +370,7 @@ async def delete_material(
     return {"message": "Material deleted successfully"}
 
 
-@router.post("admin/labor_rates", tags=["Admin: Labor"])
+@router.post("/admin/labor_rates", tags=["Admin: Labor"])
 async def create_labor_rate(
     labor: LaborRateCreate,
     db: Session = Depends(get_db),
@@ -383,7 +383,7 @@ async def create_labor_rate(
     return {"message": "Labor rate added successfully", "labor_rate": new_labor.id}
 
 
-@router.get("admin/labor_rates", tags=["Admin: Labor"])
+@router.get("/admin/labor_rates", tags=["Admin: Labor"])
 async def list_labor_rates(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin),
@@ -391,7 +391,7 @@ async def list_labor_rates(
     return db.query(LaborRate).all()
 
 
-@router.get("admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
+@router.get("/admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
 async def get_labor_rate(
     labor_rate_id: int,
     db: Session = Depends(get_db),
@@ -400,7 +400,7 @@ async def get_labor_rate(
     return _get_reference_record(db, LaborRate, labor_rate_id, "Labor rate")
 
 
-@router.patch("admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
+@router.patch("/admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
 async def update_labor_rate(
     labor_rate_id: int,
     labor: LaborRateUpdate,
@@ -411,7 +411,7 @@ async def update_labor_rate(
     return _update_reference_record(db, record, labor.model_dump(exclude_unset=True))
 
 
-@router.put("admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
+@router.put("/admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
 async def replace_labor_rate(
     labor_rate_id: int,
     labor: LaborRateCreate,
@@ -422,7 +422,7 @@ async def replace_labor_rate(
     return _update_reference_record(db, record, labor.model_dump())
 
 
-@router.delete("admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
+@router.delete("/admin/labor_rates/{labor_rate_id}", tags=["Admin: Labor"])
 async def delete_labor_rate(
     labor_rate_id: int,
     db: Session = Depends(get_db),
