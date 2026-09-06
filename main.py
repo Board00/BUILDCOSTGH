@@ -1,6 +1,15 @@
-from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import Cookie, Depends, FastAPI, Request
 from fastapi.openapi.docs import get_redoc_html
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from auth import decode_token
+from database import get_db
 from error_handlers import register_error_handlers
+from models import User
 from routers import router
 
 app = FastAPI(
@@ -21,6 +30,57 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url=None  # disable default ReDoc so we can override it
 )
+
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def home_page(request: Request):
+    return templates.TemplateResponse(request=request, name="home.html")
+
+
+@app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+async def login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html")
+
+
+@app.get("/signup", response_class=HTMLResponse, include_in_schema=False)
+async def signup_page(request: Request):
+    return templates.TemplateResponse(request=request, name="signup.html")
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+async def user_dashboard_page(
+    request: Request,
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+):
+    user = _get_page_user(access_token, db)
+    if user is None or user.is_admin:
+        return RedirectResponse("/login", status_code=303)
+    return templates.TemplateResponse(request=request, name="dashboard.html")
+
+
+def _get_page_user(access_token: str | None, db: Session):
+    if not access_token:
+        return None
+    payload = decode_token(access_token)
+    username = payload.get("sub") if payload else None
+    return db.query(User).filter(User.username == username).first() if username else None
+
+
+@app.get("/admin/dashboard", response_class=HTMLResponse, include_in_schema=False)
+async def admin_dashboard_page(
+    request: Request,
+    access_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+):
+    user = _get_page_user(access_token, db)
+    if user is None or not user.is_admin:
+        return RedirectResponse("/login", status_code=303)
+    return templates.TemplateResponse(request=request, name="admin_dashboard.html")
 
 # Custom ReDoc page
 

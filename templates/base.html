@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BuildCost gives Ghanaian builders a clearer way to plan construction costs.">
+    <title>{% block title %}BuildCost{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="BuildCost home">
+            <span class="brand-mark">B</span>
+            <span>BuildCost</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="/#how-it-works">How it works</a>
+            <a href="/#why-buildcost">Why BuildCost</a>
+            <a class="nav-login" href="/login">Log in</a>
+            <a class="button button-small" href="/signup">Get started <span aria-hidden="true">&#8599;</span></a>
+        </nav>
+        <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
+    </header>
+    <main>{% block content %}{% endblock %}</main>
+    <footer class="site-footer">
+        <span class="brand-footer">BuildCost</span>
+        <span>Build with more certainty.</span>
+    </footer>
+    <script src="{{ url_for('static', path='app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

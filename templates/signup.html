@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Create account | BuildCost{% endblock %}
+{% block content %}
+<section class="auth-layout page-shell">
+    <div class="auth-intro"><p class="eyebrow"><span class="eyebrow-dot"></span> Start with clarity</p><h1>Give your build a stronger <em>beginning.</em></h1><p>Create your free account and keep your estimates close as your plans take shape.</p><div class="auth-rule"></div><span class="auth-caption">BuildCost / 02</span></div>
+    <div class="auth-panel"><div class="auth-panel-head"><span class="panel-kicker">CREATE ACCOUNT</span><h2>Join BuildCost</h2><p>It takes less than a minute to get started.</p></div><form id="signup-form" class="auth-form"><label for="signup-username">Username</label><input id="signup-username" name="username" type="text" autocomplete="username" minlength="3" maxlength="100" required placeholder="Choose a username"><label for="signup-password">Password</label><input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required placeholder="At least 8 characters"><button class="button form-button" type="submit">Create account <span aria-hidden="true">&#8594;</span></button><p class="form-message" role="alert" aria-live="polite"></p></form><p class="auth-switch">Already have an account? <a href="/login">Log in</a></p></div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='auth.js') }}"></script>{% endblock %}
