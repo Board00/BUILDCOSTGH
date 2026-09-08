@@ -18,6 +18,7 @@ class MaterialItemEnum(str, Enum):
 from enum import Enum
 
 class DistrictEnum(str, Enum):
+    # CENTRAL DISTRICTS
     abura_asebu_kwamankese = "Abura/Asebu/Kwamankese"
     agona_east = "Agona East"
     agona_west = "Agona West"
@@ -41,7 +42,7 @@ class DistrictEnum(str, Enum):
     upper_denkyira_east = "Upper Denkyira East"
     upper_denkyira_west = "Upper Denkyira West"
 
-
+# GREATER ACCRA DISTRICTS
     ablekuma_central = "Ablekuma Central"
     ablekuma_north = "Ablekuma North"
     ablekuma_west = "Ablekuma West"
@@ -71,7 +72,7 @@ class DistrictEnum(str, Enum):
     tema_metropolitan = "Tema Metropolitan"
     tema_west = "Tema West"
 
-
+# AHANTI DISTRICTS
     adansi_asokwa = "Adansi Asokwa"
     adansi_north = "Adansi North"
     adansi_south = "Adansi South"
@@ -115,6 +116,43 @@ class DistrictEnum(str, Enum):
     suame = "Suame"
     suame_municipal = "Suame Municipal"
     suame_north = "Suame North"
+
+
+REGION_DISTRICTS = {
+    RegionEnum.central: frozenset({
+        "Abura/Asebu/Kwamankese", "Agona East", "Agona West",
+        "Ajumako Enyan Essiam", "Asikuma Odoben Brakwa", "Assin Central",
+        "Assin North", "Assin South", "Awutu Senya East", "Awutu Senya West",
+        "Cape Coast Metropolitan", "Effutu", "Ekumfi", "Gomoa East",
+        "Gomoa Central", "Gomoa West", "Komenda/Edina/Eguafo/Abirem",
+        "Mfantsiman", "Twifo Atti-Morkwa", "Twifo Hemang Lower Denkyira",
+        "Upper Denkyira East", "Upper Denkyira West",
+    }),
+    RegionEnum.accra: frozenset({
+        "Ablekuma Central", "Ablekuma North", "Ablekuma West",
+        "Accra Metropolitan", "Ada East", "Ada West", "Adentan", "Ashaiman",
+        "Ayawaso Central", "Ayawaso East", "Ayawaso North", "Ayawaso West",
+        "Ga Central", "Ga East", "Ga North", "Ga South", "Ga West",
+        "Korle Klottey", "Kpone Katamanso", "Krowor", "La Dade-Kotopon",
+        "La Nkwantanang Madina", "Ledzokuku", "Ningo-Prampram",
+        "Okaikwei North", "Shai Osudoku", "Tema Metropolitan", "Tema West",
+    }),
+    RegionEnum.ashanti: frozenset({
+        "Adansi Asokwa", "Adansi North", "Adansi South", "Afigya Kwabre North",
+        "Afigya Kwabre South", "Ahafo Ano North", "Ahafo Ano South East",
+        "Ahafo Ano South West", "Amansie Central", "Amansie West",
+        "Amansie South", "Asante Akim Central", "Asante Akim North",
+        "Asante Akim South", "Asokore Mampong", "Asokwa", "Atwima Kwanwoma",
+        "Atwima Mponua", "Atwima Nwabiagya North", "Atwima Nwabiagya South",
+        "Bekwai Municipal", "Bosome Freho", "Bosomtwe", "Ejisu",
+        "Ejura-Sekyedumase", "Kumasi Metropolitan", "Kwabre East", "Kwadaso",
+        "Mampong Municipal", "Obuasi East", "Obuasi Municipal",
+        "Offinso Municipal", "Offinso North", "Oforikrom", "Old Tafo",
+        "Sekyere Afram Plains", "Sekyere Central", "Sekyere East",
+        "Sekyere Kumawu", "Sekyere South", "Suame", "Suame Municipal",
+        "Suame North",
+    }),
+}
 
 
 

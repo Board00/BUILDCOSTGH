@@ -12,7 +12,8 @@
     {% block head %}{% endblock %}
 </head>
 <body>
-    <header class="site-header">
+    {% set is_workspace_page = request.url.path.startswith('/dashboard') or request.url.path.startswith('/admin') %}
+    {% if not is_workspace_page %}<header class="site-header">
         <a class="brand" href="/" aria-label="BuildCost home">
             <span class="brand-mark">B</span>
             <span>BuildCost</span>
@@ -20,16 +21,18 @@
         <nav class="site-nav" aria-label="Main navigation">
             <a href="/#how-it-works">How it works</a>
             <a href="/#why-buildcost">Why BuildCost</a>
-            <a class="nav-login" href="/login">Log in</a>
-            <a class="button button-small" href="/signup">Get started <span aria-hidden="true">&#8599;</span></a>
+            <a class="nav-login" id="nav-login" href="/login">Log in</a>
+            <a class="button button-small" id="nav-signup" href="/signup">Get started <span aria-hidden="true">&#8599;</span></a>
+            <a class="nav-dashboard" id="nav-dashboard" href="/dashboard" hidden>Workspace <span aria-hidden="true">&#8599;</span></a>
+            <button class="nav-logout" id="nav-logout" type="button" hidden>Log out</button>
         </nav>
         <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
-    </header>
+    </header>{% endif %}
     <main>{% block content %}{% endblock %}</main>
-    <footer class="site-footer">
+    {% if not is_workspace_page %}<footer class="site-footer">
         <span class="brand-footer">BuildCost</span>
         <span>Build with more certainty.</span>
-    </footer>
+    </footer>{% endif %}
     <script src="{{ url_for('static', path='app.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 from constants import *
 
 
@@ -12,93 +12,87 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8, max_length=72)
 
 
-class EstimateRequest(BaseModel):
+class ProfileUpdate(BaseModel):
+    username: str | None = Field(default=None, min_length=3, max_length=100)
+
+
+class RegionDistrictModel(BaseModel):
     region: RegionEnum
     district: DistrictEnum
+
+    @model_validator(mode="after")
+    def district_must_match_region(self):
+        if self.district.value not in REGION_DISTRICTS[self.region]:
+            raise ValueError(
+                f"District '{self.district.value}' does not belong to region '{self.region.value}'"
+            )
+        return self
+
+
+class OptionalRegionDistrictModel(BaseModel):
+    region: RegionEnum | None = None
+    district: DistrictEnum | None = None
+
+    @model_validator(mode="after")
+    def district_must_match_region(self):
+        if self.region is not None and self.district is not None:
+            if self.district.value not in REGION_DISTRICTS[self.region]:
+                raise ValueError(
+                    f"District '{self.district.value}' does not belong to region '{self.region.value}'"
+                )
+        return self
+
+
+class EstimateRequest(RegionDistrictModel):
     land_owned: bool = False
     area: float = Field(gt=0)
     building_type: BuildingTypeEnum
     finishing: FinishingEnum
     extras: list[ExtraEnum] = Field(default_factory=list)
 
-    @field_validator("district")
-    @classmethod
-    def district_must_match_region(cls, district, info):
-        region = info.data.get("region")
-        if region is not None:
-            district_text = district.value
-            region_districts = {
-                "Central": {"Central", "Greater Accra", "Ashanti"},
-            }
-            prefixes = {
-                "Central": ("Central", "Cape", "Abura", "Agona", "Ajumako", "Asikuma", "Assin", "Awutu", "Effutu", "Ekumfi", "Gomoa", "Komenda", "Mfantsiman", "Twifo", "Upper Denkyira"),
-                "Greater Accra": ("Accra", "Ada", "Adentan", "Ashaiman", "Ayawaso", "Ga ", "Korle", "Kpone", "Krowor", "La ", "Ledzokuku", "Ningo", "Okaikwei", "Shai", "Tema"),
-                "Ashanti": ("Adansi", "Afigya", "Ahafo", "Amansie", "Asante", "Asokore", "Asokwa", "Atwima", "Bekwai", "Bosome", "Bosomtwe", "Ejisu", "Ejura", "Kumasi", "Kwabre", "Kwadaso", "Mampong", "Obuasi", "Offinso", "Oforikrom", "Old Tafo", "Sekyere", "Suame"),
-            }
-            if not district_text.startswith(prefixes[region.value]):
-                raise ValueError(f"District '{district_text}' does not belong to region '{region.value}'")
-        return district
-
-
-class MaterialCreate(BaseModel):
-    region: RegionEnum
-    district: DistrictEnum
+class MaterialCreate(RegionDistrictModel):
     item: MaterialItemEnum
     unit: str
     price: float = Field(gt=0)
     source: str
 
 
-class LaborRateCreate(BaseModel):
-    region: RegionEnum
-    district: DistrictEnum
+class LaborRateCreate(RegionDistrictModel):
     trade: str
     rate: float = Field(gt=0)
     source: str
 
 
-class LandPriceCreate(BaseModel):
-    region: RegionEnum
-    district: DistrictEnum
+class LandPriceCreate(RegionDistrictModel):
     price: float = Field(gt=0)
     source: str
 
 
-class PermitCreate(BaseModel):
-    region: RegionEnum
-    district: DistrictEnum
+class PermitCreate(RegionDistrictModel):
     fee_type: str
     amount: float = Field(gt=0)
     source: str
 
 
-class MaterialUpdate(BaseModel):
-    region: RegionEnum | None = None
-    district: DistrictEnum | None = None
+class MaterialUpdate(OptionalRegionDistrictModel):
     item: MaterialItemEnum | None = None
     unit: str | None = None
     price: float | None = Field(default=None, gt=0)
     source: str | None = None
 
 
-class LaborRateUpdate(BaseModel):
-    region: RegionEnum | None = None
-    district: DistrictEnum | None = None
+class LaborRateUpdate(OptionalRegionDistrictModel):
     trade: str | None = None
     rate: float | None = Field(default=None, gt=0)
     source: str | None = None
 
 
-class LandPriceUpdate(BaseModel):
-    region: RegionEnum | None = None
-    district: DistrictEnum | None = None
+class LandPriceUpdate(OptionalRegionDistrictModel):
     price: float | None = Field(default=None, gt=0)
     source: str | None = None
 
 
-class PermitUpdate(BaseModel):
-    region: RegionEnum | None = None
-    district: DistrictEnum | None = None
+class PermitUpdate(OptionalRegionDistrictModel):
     fee_type: str | None = None
     amount: float | None = Field(default=None, gt=0)
     source: str | None = None

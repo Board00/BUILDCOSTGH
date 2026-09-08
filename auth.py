@@ -49,7 +49,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise AuthError("Invalid token payload")
 
     user = db.query(User).filter(User.username == username).first()
-    if not user:
+    if not user or not user.is_active:
         raise AuthError("User not found")
 
     return user

@@ -33,6 +33,7 @@ from schemas import (
     MaterialUpdate,
     PermitCreate,
     PermitUpdate,
+    ProfileUpdate,
     RegisterRequest,
 )
 
@@ -90,7 +91,10 @@ async def register(data: RegisterRequest, db: Session = Depends(get_db)):
     if user:
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    new_user = User(username=data.username, hashed_password=hash_password(data.password))
+    new_user = User(
+        username=data.username,
+        hashed_password=hash_password(data.password),
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -104,7 +108,7 @@ async def login(
     db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not user.is_active or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
@@ -146,6 +150,42 @@ async def logged_user(user: User = Depends(get_current_user)):
         "user_id": user.id,
         "is_admin": user.is_admin,
     }
+
+
+@router.patch("/user", tags=["Authentication"])
+async def update_profile(
+    data: ProfileUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    values = data.model_dump(exclude_unset=True)
+    for field, value in values.items():
+        existing = db.query(User).filter(User.username == value).first()
+        if existing and existing.id != user.id:
+            raise HTTPException(status_code=409, detail=f"{field.capitalize()} already exists")
+        setattr(user, field, value)
+    db.commit()
+    db.refresh(user)
+    access_token = create_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
+    return {
+        "message": "Profile updated successfully",
+        "access_token": access_token,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "is_admin": user.is_admin,
+        },
+    }
+
+
+@router.delete("/user", tags=["Authentication"])
+async def deactivate_account(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    user.is_active = False
+    db.commit()
+    return {"message": "Account deactivated successfully"}
 
 
 @router.get("/estimates", tags=["General User"])
