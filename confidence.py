@@ -14,25 +14,46 @@ def confidence_score(sources):
             if isinstance(value, str):
                 value = datetime.fromisoformat(value.replace("Z", "+00:00"))
             if isinstance(value, datetime):
+                if value.tzinfo is None:
+                    value = value.replace(tzinfo=timezone.utc)
                 dates.append(value)
     except Exception as e:
         raise ValidationError(f"Invalid source date format: {e}")
 
+    categories = {source.get("category") for source in sources if isinstance(source, dict)}
+    baseline_count = sum(
+        1 for source in sources
+        if isinstance(source, dict) and source.get("source") == "Built-in planning baseline"
+    )
+
     if not dates:
-        return {"level": "Low", "reason": "No valid dates in sources"}
+        return {
+            "level": "Low",
+            "reason": "Planning baselines are being used; add dated local records for a stronger estimate",
+            "source_coverage": len(categories),
+            "baseline_records": baseline_count,
+        }
 
     latest_date = max(dates)
 
     try:
-        if latest_date.tzinfo is None:
-            latest_date = latest_date.replace(tzinfo=timezone.utc)
         days_old = (datetime.now(timezone.utc) - latest_date).days
     except Exception:
         raise ValidationError("Date comparison failed due to timezone mismatch")
 
     if days_old < 90 and len(sources) >= 3:
-        return {"level": "High", "reason": "Recent data from multiple sources"}
+        level = "High"
+        reason = "Recent data from multiple source categories"
     elif days_old < 180:
-        return {"level": "Medium", "reason": "Data moderately recent"}
+        level = "Medium"
+        reason = "Data is moderately recent"
     else:
-        return {"level": "Low", "reason": "Data outdated"}
+        level = "Low"
+        reason = "Source data is outdated"
+    return {
+        "level": level,
+        "reason": reason,
+        "source_coverage": len(categories),
+        "baseline_records": baseline_count,
+        "latest_source_date": latest_date.date().isoformat(),
+    }

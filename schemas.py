@@ -18,27 +18,37 @@ class ProfileUpdate(BaseModel):
 
 class RegionDistrictModel(BaseModel):
     region: RegionEnum
-    district: DistrictEnum
+    district: str = Field(min_length=2, max_length=100)
 
     @model_validator(mode="after")
     def district_must_match_region(self):
-        if self.district.value not in REGION_DISTRICTS[self.region]:
+        known_districts = {
+            district
+            for districts in REGION_DISTRICTS.values()
+            for district in districts
+        }
+        if self.district in known_districts and self.district not in REGION_DISTRICTS.get(self.region, frozenset()):
             raise ValueError(
-                f"District '{self.district.value}' does not belong to region '{self.region.value}'"
+                f"District '{self.district}' does not belong to region '{self.region.value}'"
             )
         return self
 
 
 class OptionalRegionDistrictModel(BaseModel):
     region: RegionEnum | None = None
-    district: DistrictEnum | None = None
+    district: str | None = Field(default=None, min_length=2, max_length=100)
 
     @model_validator(mode="after")
     def district_must_match_region(self):
         if self.region is not None and self.district is not None:
-            if self.district.value not in REGION_DISTRICTS[self.region]:
+            known_districts = {
+                district
+                for districts in REGION_DISTRICTS.values()
+                for district in districts
+            }
+            if self.district in known_districts and self.district not in REGION_DISTRICTS.get(self.region, frozenset()):
                 raise ValueError(
-                    f"District '{self.district.value}' does not belong to region '{self.region.value}'"
+                    f"District '{self.district}' does not belong to region '{self.region.value}'"
                 )
         return self
 
@@ -48,6 +58,8 @@ class EstimateRequest(RegionDistrictModel):
     area: float = Field(gt=0)
     building_type: BuildingTypeEnum
     finishing: FinishingEnum
+    structural_type: str = Field(default="Sandcrete block", min_length=2, max_length=80)
+    roofing_type: str = Field(default="Long-span aluminium", min_length=2, max_length=80)
     extras: list[ExtraEnum] = Field(default_factory=list)
 
 class MaterialCreate(RegionDistrictModel):

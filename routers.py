@@ -14,7 +14,7 @@ from auth import (
     verify_password,
 )
 from confidence import confidence_score
-from cost_engine import itemized_estimate
+from cost_engine import estimate_range, itemized_estimate
 from database import get_db
 from exceptions import DatabaseError
 from feedback import submit_feedback
@@ -39,6 +39,14 @@ from schemas import (
 
 
 router = APIRouter()
+
+
+def _source_records(sources):
+    return [
+        {**record, "category": category}
+        for category, records in sources.items()
+        for record in records
+    ]
 
 
 def _get_reference_record(db: Session, model, record_id: int, resource_name: str):
@@ -480,7 +488,7 @@ async def generate_estimate(
     user: User = Depends(get_current_user),
 ):
     region = request.region.value
-    district = request.district.value
+    district = request.district
     sources = {
         "materials": get_material_prices(region, db, district),
         "labor": get_labor_rates(region, db, district),
@@ -488,7 +496,9 @@ async def generate_estimate(
         "permits": get_permits(region, db, district),
     }
     itemized = itemized_estimate(request.model_dump(), db, sources)
-    confidence = confidence_score([source for category in sources.values() for source in category])
+    source_records = _source_records(sources)
+    confidence = confidence_score(source_records)
+    planning_range = estimate_range(itemized["total"], confidence["level"])
 
     try:
         estimate = Estimate(
@@ -511,6 +521,13 @@ async def generate_estimate(
         "itemized": itemized,
         "sources": sources,
         "confidence": confidence,
+        "planning_range": planning_range,
+        "assumptions": [
+            f"{request.area:g} m² of {request.building_type.value.lower()} floor area",
+            f"{request.finishing.value.lower()} finishing using {request.structural_type.lower()}",
+            "10% contingency is included for price movement and scope uncertainty",
+            "Land is excluded because the plot is marked as already owned" if request.land_owned else "Land is included using the district or regional median",
+        ],
         "disclaimer": "Planning estimate, not certified QS quote",
     }
 
@@ -522,7 +539,7 @@ async def export_pdf(
     user: User = Depends(get_current_user),
 ):
     region = params.region.value
-    district = params.district.value
+    district = params.district
     sources = {
         "materials": get_material_prices(region, db, district),
         "labor": get_labor_rates(region, db, district),

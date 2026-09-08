@@ -78,6 +78,20 @@ const renderUserDashboard = async () => {
 const bindEstimateForm = () => {
     const form = document.querySelector('#estimate-form');
     if (!form) return;
+    const projectGrid = form.querySelector('.form-section:nth-of-type(2) .field-grid');
+    const addSelect = (name, label, options) => {
+        if (!projectGrid || projectGrid.querySelector(`[name="${name}"]`)) return;
+        const wrapper = document.createElement('label');
+        wrapper.textContent = label;
+        const select = document.createElement('select');
+        select.name = name;
+        select.required = true;
+        options.forEach((option) => select.add(new Option(option, option)));
+        wrapper.appendChild(select);
+        projectGrid.appendChild(wrapper);
+    };
+    addSelect('structural_type', 'Structural type', ['Sandcrete block', 'Brick', 'Steel frame']);
+    addSelect('roofing_type', 'Roofing type', ['Long-span aluminium', 'Tile', 'Concrete tile']);
     const regionDistricts = {
         Central: ['Abura/Asebu/Kwamankese', 'Agona East', 'Agona West', 'Ajumako Enyan Essiam', 'Asikuma Odoben Brakwa', 'Assin Central', 'Assin North', 'Assin South', 'Awutu Senya East', 'Awutu Senya West', 'Cape Coast Metropolitan', 'Effutu', 'Ekumfi', 'Gomoa East', 'Gomoa Central', 'Gomoa West', 'Komenda/Edina/Eguafo/Abirem', 'Mfantsiman', 'Twifo Atti-Morkwa', 'Twifo Hemang Lower Denkyira', 'Upper Denkyira East', 'Upper Denkyira West'],
         'Greater Accra': ['Ablekuma Central', 'Ablekuma North', 'Ablekuma West', 'Accra Metropolitan', 'Ada East', 'Ada West', 'Adentan', 'Ashaiman', 'Ayawaso Central', 'Ayawaso East', 'Ayawaso North', 'Ayawaso West', 'Ga Central', 'Ga East', 'Ga North', 'Ga South', 'Ga West', 'Korle Klottey', 'Kpone Katamanso', 'Krowor', 'La Dade-Kotopon', 'La Nkwantanang Madina', 'Ledzokuku', 'Ningo-Prampram', 'Okaikwei North', 'Shai Osudoku', 'Tema Metropolitan', 'Tema West'],
@@ -85,13 +99,25 @@ const bindEstimateForm = () => {
     };
     const regionSelect = form.querySelector('[name="region"]');
     const districtInput = form.querySelector('[name="district"]');
+    ['Ahafo', 'Bono', 'Bono East', 'Eastern', 'North East', 'Northern', 'Oti', 'Savannah', 'Upper East', 'Upper West', 'Volta', 'Western', 'Western North'].forEach((region) => {
+        if (!Array.from(regionSelect.options).some((option) => option.value === region)) regionSelect.add(new Option(region, region));
+    });
     const districtSelect = document.createElement('select');
+    const districtFallback = document.createElement('input');
+    districtFallback.name = 'district';
+    districtFallback.required = true;
+    districtFallback.placeholder = 'e.g. Wa Municipal';
     districtSelect.name = 'district';
     districtSelect.required = true;
     districtInput.replaceWith(districtSelect);
     const updateDistricts = () => {
         const districts = regionDistricts[regionSelect.value] || [];
-        districtSelect.innerHTML = `<option value="">${districts.length ? 'Select district' : 'Select region first'}</option>`;
+        if (!districts.length) {
+            districtSelect.replaceWith(districtFallback);
+            return;
+        }
+        if (districtSelect !== form.querySelector('[name="district"]')) districtFallback.replaceWith(districtSelect);
+        districtSelect.innerHTML = `<option value="">Select district</option>`;
         districts.forEach((district) => districtSelect.add(new Option(district, district)));
         districtSelect.disabled = districts.length === 0;
     };
@@ -101,10 +127,14 @@ const bindEstimateForm = () => {
         event.preventDefault();
         const button = form.querySelector('button'); button.disabled = true; button.firstChild.textContent = 'Calculating...';
         const values = new FormData(form);
-        const payload = { region: values.get('region'), district: values.get('district'), area: Number(values.get('area')), building_type: values.get('building_type'), finishing: values.get('finishing'), land_owned: values.get('land_owned') === 'on', extras: values.getAll('extras') };
+        const payload = { region: values.get('region'), district: values.get('district'), area: Number(values.get('area')), building_type: values.get('building_type'), finishing: values.get('finishing'), structural_type: values.get('structural_type'), roofing_type: values.get('roofing_type'), land_owned: values.get('land_owned') === 'on', extras: values.getAll('extras') };
         try {
             const result = await apiRequest('/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            form.hidden = true; const resultPanel = document.querySelector('.estimate-result'); resultPanel.hidden = false; document.querySelector('[data-result-total]').textContent = money(result.itemized.total); document.querySelector('[data-result-confidence]').textContent = `${result.confidence.level} confidence · Estimate #${result.estimate_id}`; await renderUserDashboard();
+            form.hidden = true; const resultPanel = document.querySelector('.estimate-result'); resultPanel.hidden = false; document.querySelector('[data-result-total]').textContent = money(result.itemized.total); document.querySelector('[data-result-confidence]').textContent = `${result.confidence.level} confidence · Estimate #${result.estimate_id}`;
+            let detail = resultPanel.querySelector('[data-result-detail]');
+            if (!detail) { detail = document.createElement('div'); detail.dataset.resultDetail = 'true'; resultPanel.appendChild(detail); }
+            detail.innerHTML = `<p>${money(result.planning_range.low)} – ${money(result.planning_range.high)} planning range</p><p>${result.confidence.reason}</p><ul>${result.assumptions.map((assumption) => `<li>${assumption}</li>`).join('')}</ul>`;
+            await renderUserDashboard();
         } catch (error) { showError(error); button.disabled = false; button.firstChild.textContent = 'Generate estimate'; }
     });
     document.querySelector('[data-new-estimate]')?.addEventListener('click', () => { form.reset(); form.hidden = false; document.querySelector('.estimate-result').hidden = true; });

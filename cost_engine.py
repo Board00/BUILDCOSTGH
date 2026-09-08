@@ -2,9 +2,22 @@ from statistics import median
 from exceptions import ValidationError
 
 REGION_MULTIPLIERS = {
+    "Ahafo": 0.92,
+    "Bono": 0.90,
+    "Bono East": 0.88,
     "Greater Accra": 1.15,
     "Ashanti": 1.0,
     "Central": 0.95,
+    "Eastern": 0.98,
+    "North East": 0.84,
+    "Northern": 0.86,
+    "Oti": 0.86,
+    "Savannah": 0.82,
+    "Upper East": 0.88,
+    "Upper West": 0.84,
+    "Volta": 0.92,
+    "Western": 1.02,
+    "Western North": 0.94,
 }
 
 BUILDING_MULTIPLIERS = {
@@ -31,6 +44,18 @@ EXTRA_COSTS = {
     "Solar System": 45000,
 }
 
+STRUCTURAL_MULTIPLIERS = {
+    "Sandcrete block": 1.0,
+    "Brick": 1.08,
+    "Steel frame": 1.22,
+}
+
+ROOFING_MULTIPLIERS = {
+    "Long-span aluminium": 1.0,
+    "Tile": 1.18,
+    "Concrete tile": 1.25,
+}
+
 
 def calculate_cost(area, unit_cost, multiplier=1.0):
     if area <= 0:
@@ -55,7 +80,8 @@ def itemized_estimate(params, db_session=None, sources=None):
 
     sources = sources or {}
 
-    # Extract material and labor factors
+    # Retrieved prices influence the deterministic calculation; the model never
+    # invents a total when the source tables are available.
     material_prices = [item["price"] for item in sources.get("materials", []) if item.get("price", 0) > 0]
     labor_rates = [item["rate"] for item in sources.get("labor", []) if item.get("rate", 0) > 0]
     material_factor = median(material_prices) / 100 if material_prices else 1.0
@@ -75,14 +101,18 @@ def itemized_estimate(params, db_session=None, sources=None):
     finishing = params.get("finishing")
     finishing_key = finishing.value if hasattr(finishing, "value") else finishing
     finishing_factor = FINISHING_MULTIPLIERS.get(finishing_key, 1.0)
+    structural_factor = STRUCTURAL_MULTIPLIERS.get(params.get("structural_type"), 1.0)
+    roofing_factor = ROOFING_MULTIPLIERS.get(params.get("roofing_type"), 1.0)
 
-    factor = location_factor * building_factor * finishing_factor
+    factor = location_factor * building_factor * finishing_factor * structural_factor
 
-    # Core cost components
-    foundation_cost = calculate_cost(area, 50 * material_factor, 1.1 * location_factor)
-    superstructure_cost = calculate_cost(area, 120 * material_factor, factor)
-    roofing_cost = calculate_cost(area, 80 * material_factor, 1.2 * finishing_factor * location_factor)
-    labor_cost = calculate_cost(area, 70 * labor_factor, factor)
+    # Planning rates are deliberately separated by phase so the result can be
+    # reviewed and adjusted by a quantity surveyor.
+    foundation_cost = calculate_cost(area, 250 * material_factor, 1.1 * location_factor)
+    superstructure_cost = calculate_cost(area, 650 * material_factor, factor)
+    roofing_cost = calculate_cost(area, 300 * material_factor, 1.2 * finishing_factor * roofing_factor * location_factor)
+    finishing_cost = calculate_cost(area, 500 * material_factor, 0.9 * finishing_factor * building_factor)
+    labor_cost = calculate_cost(area, 350 * labor_factor, factor)
 
     # Extras
     extras = params.get("extras", [])
@@ -98,15 +128,39 @@ def itemized_estimate(params, db_session=None, sources=None):
     land_prices = [item["price"] for item in sources.get("land", []) if item.get("price", 0) > 0]
     land_cost = median(land_prices) if land_prices and not params.get("land_owned", False) else 0
 
-    total = foundation_cost + superstructure_cost + roofing_cost + labor_cost + extras_cost + permits_cost + land_cost
+    subtotal = (
+        foundation_cost
+        + superstructure_cost
+        + roofing_cost
+        + finishing_cost
+        + labor_cost
+        + extras_cost
+        + permits_cost
+        + land_cost
+    )
+    contingency = subtotal * 0.10
+    total = subtotal + contingency
 
     return {
-        "foundation": foundation_cost,
-        "superstructure": superstructure_cost,
-        "roofing": roofing_cost,
-        "labor": labor_cost,
-        "extras": extras_cost,
-        "permits": permits_cost,
-        "land": land_cost,
-        "total": total
+        "land": round(land_cost, 2),
+        "site_preparation_and_foundation": round(foundation_cost, 2),
+        "superstructure": round(superstructure_cost, 2),
+        "roofing": round(roofing_cost, 2),
+        "finishes": round(finishing_cost, 2),
+        "labor": round(labor_cost, 2),
+        "permits": round(permits_cost, 2),
+        "extras": round(extras_cost, 2),
+        "contingency": round(contingency, 2),
+        "subtotal": round(subtotal, 2),
+        "total": round(total, 2),
+    }
+
+
+def estimate_range(total, confidence_level):
+    """Return a planning range; tighter ranges require better source coverage."""
+    variance = {"High": 0.15, "Medium": 0.20, "Low": 0.25}.get(confidence_level, 0.25)
+    return {
+        "low": round(total * (1 - variance), 2),
+        "high": round(total * (1 + variance), 2),
+        "variance_percent": round(variance * 100),
     }

@@ -15,9 +15,22 @@ MATERIAL_ITEMS = (
 )
 
 REGION_BASELINES = {
+    "Ahafo": {"multiplier": 0.92, "land": 140000, "permit": 4000},
+    "Bono": {"multiplier": 0.90, "land": 130000, "permit": 4000},
+    "Bono East": {"multiplier": 0.88, "land": 120000, "permit": 3500},
     "Greater Accra": {"multiplier": 1.15, "land": 300000, "permit": 6000},
     "Ashanti": {"multiplier": 1.0, "land": 220000, "permit": 5000},
     "Central": {"multiplier": 0.95, "land": 180000, "permit": 4500},
+    "Eastern": {"multiplier": 0.98, "land": 175000, "permit": 4500},
+    "North East": {"multiplier": 0.84, "land": 100000, "permit": 3000},
+    "Northern": {"multiplier": 0.86, "land": 110000, "permit": 3500},
+    "Oti": {"multiplier": 0.86, "land": 105000, "permit": 3500},
+    "Savannah": {"multiplier": 0.82, "land": 90000, "permit": 3000},
+    "Upper East": {"multiplier": 0.88, "land": 115000, "permit": 3500},
+    "Upper West": {"multiplier": 0.84, "land": 100000, "permit": 3000},
+    "Volta": {"multiplier": 0.92, "land": 145000, "permit": 4000},
+    "Western": {"multiplier": 1.02, "land": 190000, "permit": 5000},
+    "Western North": {"multiplier": 0.94, "land": 150000, "permit": 4000},
 }
 
 
