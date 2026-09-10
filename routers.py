@@ -209,7 +209,7 @@ async def list_my_estimates(
     )
 
 
-@router.get("/admin/dashboard-data", tags=["Admin"])
+@router.get("/admin/dashboard-data", tags=["Admin: Records"])
 async def admin_dashboard(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin),
