@@ -85,7 +85,7 @@ class DistrictEnum(str, Enum):
     tema_metropolitan = "Tema Metropolitan"
     tema_west = "Tema West"
 
-# AHANTI DISTRICTS
+# ASHANTI DISTRICTS
     adansi_asokwa = "Adansi Asokwa"
     adansi_north = "Adansi North"
     adansi_south = "Adansi South"
@@ -130,7 +130,7 @@ class DistrictEnum(str, Enum):
     suame_municipal = "Suame Municipal"
     suame_north = "Suame North"
 
-
+# MATCH DISTRICTS TO THEIR VARIOUS REGIONS
 REGION_DISTRICTS = {
     RegionEnum.central: frozenset({
         "Abura/Asebu/Kwamankese", "Agona East", "Agona West",
@@ -167,27 +167,21 @@ REGION_DISTRICTS = {
     }),
 }
 
-
-
+# BUILDING TYPES
 class BuildingTypeEnum(str, Enum):
     residential = "Residential"
     commercial = "Commercial"
     mixed_use = "Mixed-Use"
     industrial = "Industrial"
 
-
-# -------------------------
 # FINISHING LEVELS
-# -------------------------
 class FinishingEnum(str, Enum):
     basic = "Basic"
     standard = "Standard"
     premium = "Premium"
     luxury = "Luxury"
 
-# -------------------------
 # EXTRAS
-# -------------------------
 class ExtraEnum(str, Enum):
     fence = "Fence"
     gate = "Gate"

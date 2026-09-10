@@ -1,3 +1,5 @@
+# PLEASE NOTE THIS CODE IS FOR TESTING PURPOSE AND IT STANDS TO BE CHANGES BASED ON THE RIGHT LOGIC
+
 from sqlalchemy.orm import Session
 from models import Material, LaborRate, LandPrice, Permit
 from exceptions import DatabaseError, ValidationError
