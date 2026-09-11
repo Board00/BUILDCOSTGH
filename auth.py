@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User
-from Reuse.exceptions import AuthError
+from exceptions import AuthError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 

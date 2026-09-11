@@ -2,7 +2,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 def generate_pdf(itemized, sources, disclaimer="Planning estimate, not certified QS quote"):
-    filename = "../estimate_report.pdf"
+    filename = "estimate_report.pdf"
     c = canvas.Canvas(filename, pagesize=letter)
     c.drawString(100, 750, "BuildCost GH Estimate Report")
     y = 700
