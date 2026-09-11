@@ -44,6 +44,7 @@ dependencies = [
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.3",
     "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.32",
     "reportlab>=5.0.1",
     "sqlalchemy>=2.0.52",
     "uliweb-alembic>=0.6.9",
