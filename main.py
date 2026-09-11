@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from error_handlers import register_error_handlers
+from Reuse.error_handlers import register_error_handlers
 from routers import router as backend_router
 from frontend_routers import router as frontend_router
 from migration_router import router as migration_router

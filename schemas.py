@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, model_validator
-from constants import *
+from Reuse.constants import *
 
 
 class AdminCreate(BaseModel):
