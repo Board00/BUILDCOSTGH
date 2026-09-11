@@ -1,5 +1,6 @@
 # Ignore environment files
 .env
 
-.idea
+.idea/
 .venv
+__pycache__/
