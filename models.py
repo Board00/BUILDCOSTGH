@@ -55,7 +55,7 @@ class Estimate(Base):
     itemized = Column(JSON, nullable=False)
     total = Column(Numeric, nullable=False)
     confidence = Column(String, nullable=False)
-    date = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    time = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     feedback = relationship("Feedback", back_populates="estimate")
     user = relationship("User", back_populates="estimates")
