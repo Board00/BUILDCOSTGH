@@ -21,7 +21,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(backend_router)
 app.include_router(frontend_router)
-app.include_router(migration_router)
+# app.include_router(migration_router)
 
 register_error_handlers(app)
 
@@ -29,20 +29,3 @@ register_error_handlers(app)
 def on_startup():
     init_db()   # 👈 runs table creation at startup
 
-# @app.on_event("startup")
-# def seed_admin():
-#     db = SessionLocal()
-#     admin = db.query(User).filter(User.username == "BUILDCOSTGHRAILWAY").first()
-#     if not admin:
-#         new_admin = User(
-#             username="BUILDCOSTGHRAILWAY",
-#             hashed_password=hash_password("BUILDCOSTGHRAILWAY"),  # hashed password
-#             is_admin=True,
-#             is_active=True
-#         )
-#         db.add(new_admin)
-#         db.commit()
-#         print("✅ Admin user created in Render DB")
-#     else:
-#         print("ℹ️ Admin already exists")
-#     db.close()
