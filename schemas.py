@@ -22,12 +22,7 @@ class RegionDistrictModel(BaseModel):
 
     @model_validator(mode="after")
     def district_must_match_region(self):
-        known_districts = {
-            district
-            for districts in REGION_DISTRICTS.values()
-            for district in districts
-        }
-        if self.district in known_districts and self.district not in REGION_DISTRICTS.get(self.region, frozenset()):
+        if self.district not in REGION_DISTRICTS.get(self.region, frozenset()):
             raise ValueError(
                 f"District '{self.district}' does not belong to region '{self.region.value}'"
             )
@@ -41,12 +36,7 @@ class OptionalRegionDistrictModel(BaseModel):
     @model_validator(mode="after")
     def district_must_match_region(self):
         if self.region is not None and self.district is not None:
-            known_districts = {
-                district
-                for districts in REGION_DISTRICTS.values()
-                for district in districts
-            }
-            if self.district in known_districts and self.district not in REGION_DISTRICTS.get(self.region, frozenset()):
+            if self.district not in REGION_DISTRICTS.get(self.region, frozenset()):
                 raise ValueError(
                     f"District '{self.district}' does not belong to region '{self.region.value}'"
                 )

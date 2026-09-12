@@ -99,24 +99,13 @@ const bindEstimateForm = () => {
     };
     const regionSelect = form.querySelector('[name="region"]');
     const districtInput = form.querySelector('[name="district"]');
-    ['Ahafo', 'Bono', 'Bono East', 'Eastern', 'North East', 'Northern', 'Oti', 'Savannah', 'Upper East', 'Upper West', 'Volta', 'Western', 'Western North'].forEach((region) => {
-        if (!Array.from(regionSelect.options).some((option) => option.value === region)) regionSelect.add(new Option(region, region));
-    });
+    regionSelect.innerHTML = '<option value="">Select region</option><option>Central</option><option>Greater Accra</option><option>Ashanti</option>';
     const districtSelect = document.createElement('select');
-    const districtFallback = document.createElement('input');
-    districtFallback.name = 'district';
-    districtFallback.required = true;
-    districtFallback.placeholder = 'e.g. Wa Municipal';
     districtSelect.name = 'district';
     districtSelect.required = true;
     districtInput.replaceWith(districtSelect);
     const updateDistricts = () => {
         const districts = regionDistricts[regionSelect.value] || [];
-        if (!districts.length) {
-            districtSelect.replaceWith(districtFallback);
-            return;
-        }
-        if (districtSelect !== form.querySelector('[name="district"]')) districtFallback.replaceWith(districtSelect);
         districtSelect.innerHTML = `<option value="">Select district</option>`;
         districts.forEach((district) => districtSelect.add(new Option(district, district)));
         districtSelect.disabled = districts.length === 0;

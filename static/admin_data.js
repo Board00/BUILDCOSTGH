@@ -11,6 +11,7 @@ const resourceConfig = {
 };
 
 const config = resourceConfig[resource];
+let referenceRegions = {};
 const request = async (path, options = {}) => {
     const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(options.headers || {}) } });
     const data = await response.json();
@@ -25,13 +26,21 @@ let editingId = null;
 const renderForm = (record = {}) => {
     form.innerHTML = config.fields.map((field) => {
         const value = record[field.name] ?? '';
-        const input = field.type === 'select'
+        const input = field.name === 'district'
+            ? `<select name="district" required><option value="">Select district</option>${(referenceRegions[record.region] || []).map((district) => `<option ${district === value ? 'selected' : ''}>${district}</option>`).join('')}</select>`
+            : field.type === 'select'
             ? `<select name="${field.name}" required><option value="">Select ${field.label.toLowerCase()}</option>${field.options.map((option) => `<option ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select>`
             : `<input name="${field.name}" type="${field.type || 'text'}" ${field.step ? `step="${field.step}"` : ''} value="${value}" required placeholder="${field.placeholder || ''}">`;
         return `<label>${field.label}${input}</label>`;
     }).join('') + '<button class="button form-button" type="submit"><span data-submit-label>Save record</span><span aria-hidden="true">&#8594;</span></button>';
     document.querySelector('[data-form-title]').textContent = editingId ? `Edit ${config.singular}` : `Add ${config.singular}`;
     formPanel.hidden = false;
+    form.querySelector('[name="region"]')?.addEventListener('change', (event) => {
+        const districtSelect = form.querySelector('[name="district"]');
+        districtSelect.innerHTML = '<option value="">Select district</option>';
+        (referenceRegions[event.target.value] || []).forEach((district) => districtSelect.add(new Option(district, district)));
+        districtSelect.disabled = !(referenceRegions[event.target.value] || []).length;
+    });
     form.querySelector('input, select')?.focus();
 };
 
@@ -57,4 +66,4 @@ document.querySelector('[data-add-record]').addEventListener('click', () => { ed
 document.querySelector('[data-cancel-form]').addEventListener('click', () => { formPanel.hidden = true; editingId = null; });
 
 document.querySelectorAll('.logout-button').forEach((button) => button.addEventListener('click', async () => { try { await fetch('/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }); } finally { localStorage.removeItem('buildcost_access_token'); window.location.href = '/login'; } }));
-if (token && config) loadRecords().catch((error) => showMessage(error.message, true));
+if (token && config) request('/reference/regions').then((regions) => { referenceRegions = regions; return loadRecords(); }).catch((error) => showMessage(error.message, true));
