@@ -21,6 +21,7 @@ from feedback import submit_feedback
 from models import Estimate, LandPrice, LaborRate, Material, Permit, User
 from pdf_export import generate_pdf
 from retrieval import get_land_prices, get_labor_rates, get_material_prices, get_permits
+from constants import REGION_DISTRICTS
 from schemas import (
     AdminCreate,
     EstimateRequest,
@@ -39,6 +40,15 @@ from schemas import (
 
 
 router = APIRouter()
+
+
+@router.get("/reference/regions", tags=["Reference"])
+async def list_reference_regions():
+    """Return allowed regions and their districts for frontend dropdowns."""
+    return {
+        region.value: sorted(list(districts))
+        for region, districts in REGION_DISTRICTS.items()
+    }
 
 
 def _source_records(sources):

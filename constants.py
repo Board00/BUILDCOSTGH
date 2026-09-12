@@ -1,22 +1,9 @@
 from enum import Enum
 
 class RegionEnum(str, Enum):
-    ahafo = "Ahafo"
-    bono = "Bono"
-    bono_east = "Bono East"
     central = "Central"
     accra = "Greater Accra"
     ashanti = "Ashanti"
-    eastern = "Eastern"
-    north_east = "North East"
-    northern = "Northern"
-    oti = "Oti"
-    savannah = "Savannah"
-    upper_east = "Upper East"
-    upper_west = "Upper West"
-    volta = "Volta"
-    western = "Western"
-    western_north = "Western North"
 
 class MaterialItemEnum(str, Enum):
     cement = "Cement"
