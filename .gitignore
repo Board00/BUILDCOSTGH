@@ -4,3 +4,7 @@
 .idea/
 .venv
 __pycache__/
+Checker.py
+commands.txt
+estimate_report.pdf
+migration_router.py

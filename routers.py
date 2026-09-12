@@ -1,7 +1,9 @@
 import os
-from datetime import timedelta
+import hashlib
+import secrets
+from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -18,7 +20,8 @@ from cost_engine import estimate_range, itemized_estimate
 from database import get_db
 from exceptions import DatabaseError
 from feedback import submit_feedback
-from models import Estimate, LandPrice, LaborRate, Material, Permit, User
+from models import Estimate, LandPrice, LaborRate, Material, PasswordResetToken, Permit, User
+from mail_service import send_password_reset_email, send_welcome_email
 from pdf_export import generate_pdf
 from retrieval import get_land_prices, get_labor_rates, get_material_prices, get_permits
 from constants import REGION_DISTRICTS
@@ -36,6 +39,8 @@ from schemas import (
     PermitUpdate,
     ProfileUpdate,
     RegisterRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 
 
@@ -104,19 +109,71 @@ async def register_admin(
 
 
 @router.post("/register", tags=["Authentication"])
-async def register(data: RegisterRequest, db: Session = Depends(get_db)):
+async def register(
+    data: RegisterRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     user = db.query(User).filter(User.username == data.username).first()
     if user:
         raise HTTPException(status_code=400, detail="Username already exists")
+    if db.query(User).filter(User.email == str(data.email)).first():
+        raise HTTPException(status_code=400, detail="Email already exists")
 
     new_user = User(
         username=data.username,
+        email=str(data.email),
+        fullname=data.fullname,
         hashed_password=hash_password(data.password),
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    background_tasks.add_task(send_welcome_email, new_user.email, new_user.username)
     return {"message": "User registered successfully"}
+
+
+@router.post("/forgot-password", tags=["Authentication"])
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.email == str(data.email), User.is_active.is_(True)).first()
+    if user:
+        raw_token = secrets.token_urlsafe(48)
+        token = PasswordResetToken(
+            user_id=user.id,
+            token_hash=hashlib.sha256(raw_token.encode()).hexdigest(),
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+        )
+        db.add(token)
+        db.commit()
+        reset_url = f"{os.getenv('APP_BASE_URL', 'http://localhost:8000')}/reset-password?token={raw_token}"
+        background_tasks.add_task(send_password_reset_email, user.email, user.username, reset_url)
+
+    return {"message": "If an account exists for that email, a reset link has been sent."}
+
+
+@router.post("/reset-password", tags=["Authentication"])
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    token_hash = hashlib.sha256(data.token.encode()).hexdigest()
+    reset_token = (
+        db.query(PasswordResetToken)
+        .filter(
+            PasswordResetToken.token_hash == token_hash,
+            PasswordResetToken.used_at.is_(None),
+            PasswordResetToken.expires_at > datetime.now(timezone.utc),
+        )
+        .first()
+    )
+    if not reset_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    reset_token.user.hashed_password = hash_password(data.password)
+    reset_token.used_at = datetime.now(timezone.utc)
+    db.commit()
+    return {"message": "Password reset successfully"}
 
 
 @router.post("/login", tags=["Authentication"])
@@ -214,7 +271,7 @@ async def list_my_estimates(
     return (
         db.query(Estimate)
         .filter(Estimate.user_id == user.id)
-        .order_by(Estimate.date.desc())
+        .order_by(Estimate.time.desc())
         .all()
     )
 

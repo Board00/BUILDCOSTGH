@@ -28,6 +28,14 @@ async def login_page(request: Request):
 async def signup_page(request: Request):
     return templates.TemplateResponse(request=request, name="signup.html")
 
+@router.get("/forgot-password", response_class=HTMLResponse, include_in_schema=False)
+async def forgot_password_page(request: Request):
+    return templates.TemplateResponse(request=request, name="forgot_password.html")
+
+@router.get("/reset-password", response_class=HTMLResponse, include_in_schema=False)
+async def reset_password_page(request: Request):
+    return templates.TemplateResponse(request=request, name="reset_password.html")
+
 @router.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 async def user_dashboard_page(
     request: Request,

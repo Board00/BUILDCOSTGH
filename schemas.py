@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, EmailStr
+
 from constants import *
 
 
@@ -9,11 +10,25 @@ class AdminCreate(BaseModel):
 
 class RegisterRequest(BaseModel):
     username: str = Field(min_length=3, max_length=100)
+    email: EmailStr = Field(min_length=3, max_length=100)
+    fullname: str = Field(min_length=3, max_length=100)
+    password: str = Field(min_length=8, max_length=72)
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=200)
     password: str = Field(min_length=8, max_length=72)
 
 
 class ProfileUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=3, max_length=100)
+    password: str = Field(min_length=8, max_length=72)
+    email: EmailStr = Field(min_length=3, max_length=100)
+    fullname: str = Field(min_length=3, max_length=100)
 
 
 class RegionDistrictModel(BaseModel):

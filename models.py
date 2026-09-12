@@ -66,12 +66,25 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    fullname = Column(String, nullable=True)
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-
     saved_estimates = relationship("SavedEstimate", back_populates="user")
     estimates = relationship("Estimate", back_populates="user")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user")
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String, unique=True, nullable=False, index=True)
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    used_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    user = relationship("User", back_populates="password_reset_tokens")
 
 
 class SavedEstimate(Base):

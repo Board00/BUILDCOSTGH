@@ -16,13 +16,28 @@ if (form) {
 
         try {
             const isLogin = form.id === 'login-form';
+            const isForgotPassword = form.id === 'forgot-password-form';
+            const isResetPassword = form.id === 'reset-password-form';
             const body = isLogin
                 ? new URLSearchParams(new FormData(form))
                 : JSON.stringify(Object.fromEntries(new FormData(form)));
-            const response = await fetch(isLogin ? '/login' : '/register', {
+            const endpoint = isLogin
+                ? '/login'
+                : isForgotPassword
+                    ? '/forgot-password'
+                    : isResetPassword
+                        ? '/reset-password'
+                        : '/register';
+            const requestBody = isResetPassword
+                ? JSON.stringify({
+                    ...Object.fromEntries(new FormData(form)),
+                    token: new URLSearchParams(window.location.search).get('token'),
+                })
+                : body;
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: isLogin ? { 'Content-Type': 'application/x-www-form-urlencoded' } : { 'Content-Type': 'application/json' },
-                body,
+                body: requestBody,
             });
             const data = await readResponse(response);
             if (!response.ok) throw new Error(data.detail || data.error?.message || 'Something went wrong.');
@@ -41,6 +56,14 @@ if (form) {
                 message.classList.add('success');
                 const destination = profile.is_admin ? '/admin/dashboard' : '/dashboard';
                 window.setTimeout(() => { window.location.href = destination; }, 700);
+            } else if (isForgotPassword) {
+                message.textContent = data.message;
+                message.classList.add('success');
+                button.disabled = false;
+            } else if (isResetPassword) {
+                message.textContent = 'Password updated. Redirecting you to log in...';
+                message.classList.add('success');
+                window.setTimeout(() => { window.location.href = '/login'; }, 900);
             } else {
                 message.textContent = 'Account created. Redirecting you to log in...';
                 message.classList.add('success');
