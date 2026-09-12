@@ -1,0 +1,461 @@
+@import "../../node_modules/tailwindcss/dist/lib.d.mts";
+
+@theme {
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "DM Sans", sans-serif;
+    --color-ink: #16231f;
+    --color-muted: #66736d;
+    --color-paper: #eef3ef;
+    --color-surface: rgba(255, 255, 255, 0.68);
+    --color-surface-strong: rgba(255, 255, 255, 0.88);
+    --color-line: rgba(27, 71, 59, 0.14);
+    --color-forest: #185847;
+    --color-forest-dark: #103b31;
+    --color-mint: #c9ef9b;
+    --color-coral: #df705c;
+    --shadow-glass: 0 20px 70px rgba(28, 73, 60, 0.12);
+    --shadow-float: 0 12px 32px rgba(28, 73, 60, 0.14);
+}
+
+@layer base {
+    :root {
+        color-scheme: light;
+        font-family: var(--font-body);
+    }
+
+    *,
+    *::before,
+    *::after {
+        border-color: var(--color-line);
+    }
+
+    body {
+        min-width: 320px;
+        background:
+            radial-gradient(circle at 8% 12%, rgba(201, 239, 155, 0.5), transparent 25rem),
+            radial-gradient(circle at 92% 85%, rgba(223, 112, 92, 0.12), transparent 24rem),
+            var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-body);
+    }
+
+    :root.dark-mode {
+        color-scheme: dark;
+        --color-ink: #e8f0eb;
+        --color-muted: #a7b7ae;
+        --color-paper: #101916;
+        --color-surface: rgba(25, 39, 34, 0.76);
+        --color-surface-strong: rgba(29, 45, 39, 0.94);
+        --color-line: rgba(196, 226, 208, 0.16);
+        --color-forest: #8bd0ad;
+        --color-forest-dark: #b9ebcb;
+        --color-mint: #d8f5a7;
+        --color-coral: #f29882;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-display);
+        letter-spacing: -0.04em;
+    }
+
+    ::selection {
+        background: var(--color-mint);
+        color: var(--color-forest-dark);
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+}
+
+@layer components {
+    .site-header {
+        @apply sticky top-0 z-40 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8;
+        background: rgba(238, 243, 239, 0.72);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .brand,
+    .dashboard-brand {
+        @apply inline-flex items-center gap-2 font-display font-bold;
+        color: var(--color-forest-dark);
+    }
+
+    .brand-mark {
+        @apply grid size-8 place-items-center font-display text-sm font-bold;
+        background: var(--color-forest);
+        color: var(--color-mint);
+        box-shadow: 4px 4px 0 rgba(16, 59, 49, 0.13);
+    }
+
+    .site-nav,
+    .dashboard-actions {
+        @apply flex items-center gap-3;
+    }
+
+    .theme-toggle,
+    .logout-button {
+        @apply inline-flex min-h-10 items-center gap-2 border px-3 py-2 text-xs font-bold transition;
+        background: rgba(255, 255, 255, 0.36);
+        border-radius: 0.75rem;
+        color: var(--color-muted);
+    }
+
+    .theme-toggle:hover,
+    .logout-button:hover {
+        border-color: var(--color-forest);
+        color: var(--color-forest);
+        background: var(--color-surface-strong);
+    }
+
+    .site-nav a:not(.button),
+    .nav-login,
+    .nav-dashboard,
+    .sidebar-bottom a {
+        @apply text-sm font-medium transition-colors;
+        color: var(--color-muted);
+    }
+
+    .site-nav a:not(.button):hover,
+    .nav-login:hover,
+    .nav-dashboard:hover,
+    .sidebar-bottom a:hover {
+        color: var(--color-forest);
+    }
+
+    .button {
+        @apply inline-flex min-h-11 items-center justify-center gap-3 border-0 px-5 py-3 text-sm font-bold transition duration-200;
+        background: var(--color-forest);
+        color: white;
+        box-shadow: 5px 5px 0 rgba(16, 59, 49, 0.16);
+        border-radius: 0.75rem;
+    }
+
+    .button:hover {
+        background: var(--color-forest-dark);
+        box-shadow: 2px 2px 0 rgba(16, 59, 49, 0.16);
+        transform: translate(2px, 2px);
+    }
+
+    .button-small {
+        @apply min-h-9 px-4 py-2 text-xs;
+    }
+
+    .button-light {
+        background: var(--color-mint);
+        color: var(--color-forest-dark);
+    }
+
+    .form-button {
+        @apply mt-3 w-full;
+    }
+
+    .page-shell {
+        @apply mx-auto w-full max-w-7xl px-5 lg:px-8;
+    }
+
+    .auth-layout {
+        @apply grid min-h-[calc(100vh-88px)] items-center gap-10 py-12 lg:grid-cols-[1fr_0.78fr] lg:gap-24;
+    }
+
+    .auth-intro h1 {
+        @apply max-w-2xl text-5xl font-bold leading-[0.98] sm:text-7xl;
+    }
+
+    .auth-intro h1 em,
+    .hero h1 em {
+        color: var(--color-forest);
+    }
+
+    .auth-intro > p:not(.eyebrow) {
+        @apply mt-7 max-w-lg text-base leading-7;
+        color: var(--color-muted);
+    }
+
+    .eyebrow,
+    .panel-kicker,
+    .metric-label,
+    .workspace-status {
+        @apply text-[0.68rem] font-bold uppercase tracking-[0.18em];
+        color: var(--color-forest);
+    }
+
+    .auth-panel,
+    .account-section,
+    .estimate-workspace,
+    .recent-section,
+    .metric-card,
+    .dashboard-tip,
+    .estimate-item {
+        background: var(--color-surface);
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        box-shadow: var(--shadow-glass);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+    }
+
+    .auth-panel {
+        @apply p-6 sm:p-10;
+        border-radius: 1.5rem;
+    }
+
+    .auth-panel-head h2,
+    .section-inline h2,
+    .workspace-heading h2 {
+        @apply mt-2 text-3xl font-bold;
+    }
+
+    .auth-panel-head p,
+    .form-message,
+    .account-message {
+        @apply mt-2 text-sm;
+        color: var(--color-muted);
+    }
+
+    .auth-form {
+        @apply mt-8 grid gap-3;
+    }
+
+    .auth-form label,
+    .profile-form label,
+    .estimate-form label {
+        @apply text-xs font-bold uppercase tracking-wide;
+        color: var(--color-muted);
+    }
+
+    .auth-form input,
+    .profile-form input,
+    .estimate-form input,
+    .estimate-form select {
+        @apply mt-1 w-full px-4 py-3 text-sm outline-none transition;
+        background: rgba(255, 255, 255, 0.52);
+        border: 1px solid var(--color-line);
+        border-radius: 0.75rem;
+        color: var(--color-ink);
+    }
+
+    .auth-form input::placeholder,
+    .profile-form input::placeholder,
+    .estimate-form input::placeholder {
+        color: var(--color-muted);
+        opacity: 0.72;
+    }
+
+    .auth-form input[type="checkbox"],
+    .estimate-form input[type="checkbox"] {
+        @apply size-4 accent-[var(--color-forest)];
+    }
+
+    .auth-form input:focus,
+    .profile-form input:focus,
+    .estimate-form input:focus,
+    .estimate-form select:focus {
+        border-color: var(--color-forest);
+        box-shadow: 0 0 0 4px rgba(24, 88, 71, 0.1);
+    }
+
+    .auth-switch {
+        @apply mt-5 text-sm;
+        color: var(--color-muted);
+    }
+
+    .auth-switch a {
+        color: var(--color-forest);
+        font-weight: 700;
+    }
+
+    .form-message.success,
+    .account-message.success {
+        color: var(--color-forest);
+    }
+
+    .form-message.error,
+    .account-message.error {
+        color: var(--color-coral);
+    }
+
+    .dashboard-shell {
+        @apply grid min-h-[calc(100vh-88px)] lg:grid-cols-[240px_1fr];
+    }
+
+    .dashboard-sidebar {
+        @apply flex flex-col border-b p-5 lg:border-b-0 lg:border-r lg:py-8 lg:pr-6;
+    }
+
+    .dashboard-nav {
+        @apply mt-8 flex gap-2 overflow-x-auto lg:mt-16 lg:block;
+    }
+
+    .dashboard-nav a {
+        @apply block whitespace-nowrap px-3 py-3 text-sm font-medium transition;
+        color: var(--color-muted);
+    }
+
+    .dashboard-nav a:hover,
+    .dashboard-nav a.active {
+        background: rgba(201, 239, 155, 0.42);
+        color: var(--color-forest-dark);
+    }
+
+    .sidebar-bottom {
+        @apply mt-auto pt-8;
+    }
+
+    .dashboard-main {
+        @apply min-w-0 py-8 lg:px-10 lg:py-12;
+    }
+
+    .dashboard-topbar,
+    .workspace-heading,
+    .section-inline {
+        @apply flex flex-wrap items-end justify-between gap-5;
+    }
+
+    .dashboard-topbar h1 {
+        @apply mt-2 text-4xl font-bold sm:text-5xl;
+    }
+
+    .dashboard-overview {
+        @apply mt-10 grid gap-4 md:grid-cols-3;
+    }
+
+    .metric-card,
+    .dashboard-tip {
+        @apply flex min-h-40 flex-col justify-between p-6;
+        border-radius: 1.25rem;
+    }
+
+    .metric-card strong {
+        @apply font-display text-5xl font-bold;
+        color: var(--color-forest);
+    }
+
+    .metric-note,
+    .dashboard-tip p,
+    .empty-state {
+        @apply text-sm leading-6;
+        color: var(--color-muted);
+    }
+
+    .metric-primary {
+        background: var(--color-forest);
+        color: white;
+    }
+
+    .metric-primary .metric-label,
+    .metric-primary strong,
+    .metric-primary .metric-note {
+        color: var(--color-mint);
+    }
+
+    .dashboard-tip {
+        background: rgba(223, 112, 92, 0.12);
+    }
+
+    .tip-number,
+    .form-section-number {
+        @apply font-display text-sm font-bold;
+        color: var(--color-coral);
+    }
+
+    .account-section,
+    .estimate-workspace,
+    .recent-section {
+        @apply mt-8 p-6 sm:p-8;
+        border-radius: 1.25rem;
+    }
+
+    .profile-form {
+        @apply mt-6 grid max-w-xl gap-4 sm:grid-cols-[1fr_auto] sm:items-end;
+    }
+
+    .account-danger {
+        @apply mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6;
+    }
+
+    .button-danger {
+        background: transparent;
+        border: 1px solid var(--color-coral);
+        box-shadow: none;
+        color: var(--color-coral);
+    }
+
+    .button-danger:hover {
+        background: rgba(223, 112, 92, 0.12);
+        color: var(--color-coral);
+        transform: translateY(-1px);
+    }
+
+    .estimate-form {
+        @apply mt-8;
+    }
+
+    .form-section {
+        @apply grid gap-4 border-t py-7 sm:grid-cols-[40px_1fr];
+    }
+
+    .form-section h3 {
+        @apply text-xl font-bold;
+    }
+
+    .field-grid,
+    .extras-grid {
+        @apply mt-5 grid gap-4 sm:grid-cols-2;
+    }
+
+    .checkbox-field,
+    .extras-grid label {
+        @apply flex items-center gap-2 normal-case tracking-normal;
+    }
+
+    .estimate-list {
+        @apply mt-6 grid gap-3;
+    }
+
+    .estimate-item {
+        @apply flex flex-wrap items-center justify-between gap-4 p-5;
+        border-radius: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .auth-panel,
+    .metric-card,
+    .dashboard-tip,
+    .estimate-item {
+        animation: rise-in 500ms ease both;
+    }
+
+    .metric-card:nth-child(2),
+    .estimate-item:nth-child(2) {
+        animation-delay: 80ms;
+    }
+
+    .metric-card:nth-child(3),
+    .estimate-item:nth-child(3) {
+        animation-delay: 160ms;
+    }
+
+    @keyframes rise-in {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}

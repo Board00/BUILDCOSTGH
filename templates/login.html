@@ -2,8 +2,31 @@
 {% block title %}Log in | BuildCost{% endblock %}
 {% block content %}
 <section class="auth-layout page-shell">
-    <div class="auth-intro"><p class="eyebrow"><span class="eyebrow-dot"></span> Welcome back</p><h1>Your next build decision starts <em>here.</em></h1><p>Log in to continue planning with local data and clear numbers.</p><div class="auth-rule"></div><span class="auth-caption">BuildCost / 01</span></div>
-    <div class="auth-panel"><div class="auth-panel-head"><span class="panel-kicker">ACCOUNT ACCESS</span><h2>Log in to BuildCost</h2><p>Enter your details to continue.</p></div><form id="login-form" class="auth-form"><label for="login-username">Username</label><input id="login-username" name="username" type="text" autocomplete="username" minlength="3" required placeholder="Your username"><label for="login-password">Password</label><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Your password"><button class="button form-button" type="submit">Log in <span aria-hidden="true">&#8594;</span></button><p class="form-message" role="alert" aria-live="polite"></p></form><a class="auth-switch" href="/forgot-password">Forgot your password?</a><p class="auth-switch">New to BuildCost? <a href="/signup">Create an account</a></p></div>
+    <div class="auth-intro"><p class="eyebrow"><span class="eyebrow-dot"></span> Welcome back</p>
+        <h1>Your next build decision starts <em>here.</em></h1>
+        <p>Log in to continue planning with local data and clear numbers.</p>
+        <div class="auth-rule"></div>
+        <span class="auth-caption">BuildCost / 01</span></div>
+    <div class="auth-panel">
+        <div class="auth-panel-head"><span class="panel-kicker">ACCOUNT ACCESS</span>
+            <h2>Log in to BuildCost</h2>
+            <p>Enter your details to continue.</p></div>
+        <form id="login-form" class="auth-form"><label for="login-username">Username</label><input id="login-username"
+                                                                                                   name="username"
+                                                                                                   type="text"
+                                                                                                   autocomplete="username"
+                                                                                                   minlength="3"
+                                                                                                   required
+                                                                                                   placeholder="Your username"><label
+                for="login-password">Password</label><input id="login-password" name="password" type="password"
+                                                            autocomplete="current-password" required
+                                                            placeholder="Your password">
+            <button class="button form-button" type="submit">Log in <span aria-hidden="true">&#8594;</span></button>
+            <p class="form-message" role="alert" aria-live="polite"></p></form>
+        <a class="auth-switch" href="/forgot-password">Forgot your password?</a>
+        <p class="auth-switch">New to BuildCost? <a href="/signup">Create an account</a></p></div>
 </section>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', path='auth.js') }}"></script>{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', path='javascript/auth.js') }}"></script>
+{% endblock %}
