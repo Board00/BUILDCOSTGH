@@ -11,6 +11,7 @@ from frontend_routers import router as frontend_router
 from init_db import init_db
 from models import User
 from routers import router as backend_router
+from migration_router import router as migration_router
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(backend_router)
 app.include_router(frontend_router)
-# app.include_router(migration_router)
+app.include_router(migration_router)
 
 register_error_handlers(app)
 
