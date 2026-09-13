@@ -126,8 +126,12 @@ async def register(
         fullname=data.fullname,
         hashed_password=hash_password(data.password),
     )
-    db.add(new_user)
-    db.commit()
+    try:
+        db.add(new_user)
+        db.commit()
+    except Exception as error:
+        db.rollback()
+        raise DatabaseError(f"Failed to register user: {error}") from error
     db.refresh(new_user)
     background_tasks.add_task(send_welcome_email, new_user.email, new_user.username)
     return {"message": "User registered successfully"}

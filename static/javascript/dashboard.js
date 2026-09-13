@@ -31,6 +31,8 @@ const bindAccountSettings = (user) => {
     const username = document.querySelector('#profile-username');
     const deactivateButton = document.querySelector('[data-deactivate-account]');
     if (username) username.value = user.message.replace('Welcome, ', '').replace('! You are logged in.', '');
+    if (form?.dataset.bound === 'true') return;
+    if (form) form.dataset.bound = 'true';
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const button = form.querySelector('button');
@@ -71,13 +73,36 @@ const renderUserDashboard = async () => {
     document.querySelectorAll('[data-estimate-count]').forEach((element) => { element.textContent = element.matches('.section-count') ? `${estimates.length} estimates` : estimates.length; });
     if (estimates.length) {
         document.querySelector('[data-latest-status]').textContent = estimates[0].confidence || 'Ready';
-        document.querySelector('[data-estimate-list]').innerHTML = estimates.slice(0, 5).map((estimate) => `<div class="estimate-row"><span class="row-index">#${estimate.id}</span><span><strong>${estimate.user_input.building_type || 'Build estimate'}</strong><small>${estimate.user_input.district || 'Ghana'} &middot; ${estimate.user_input.area || '-'} m²</small></span><strong class="row-total">${money(estimate.total)}</strong><span class="confidence-tag">${estimate.confidence}</span></div>`).join('');
+        const list = document.querySelector('[data-estimate-list]');
+        list.replaceChildren();
+        estimates.slice(0, 5).forEach((estimate) => {
+            const row = document.createElement('div');
+            row.className = 'estimate-row';
+            const index = document.createElement('span');
+            index.className = 'row-index';
+            index.textContent = `#${estimate.id}`;
+            const details = document.createElement('span');
+            const buildingType = document.createElement('strong');
+            buildingType.textContent = estimate.user_input.building_type || 'Build estimate';
+            const location = document.createElement('small');
+            location.textContent = `${estimate.user_input.district || 'Ghana'} · ${estimate.user_input.area || '-'} m²`;
+            details.append(buildingType, location);
+            const total = document.createElement('strong');
+            total.className = 'row-total';
+            total.textContent = money(estimate.total);
+            const confidence = document.createElement('span');
+            confidence.className = 'confidence-tag';
+            confidence.textContent = estimate.confidence || 'Unknown';
+            row.append(index, details, total, confidence);
+            list.appendChild(row);
+        });
     }
 };
 
 const bindEstimateForm = () => {
     const form = document.querySelector('#estimate-form');
-    if (!form) return;
+    if (!form || form.dataset.bound === 'true') return;
+    form.dataset.bound = 'true';
     const projectGrid = form.querySelector('.form-section:nth-of-type(2) .field-grid');
     const addSelect = (name, label, options) => {
         if (!projectGrid || projectGrid.querySelector(`[name="${name}"]`)) return;
@@ -119,14 +144,40 @@ const bindEstimateForm = () => {
         const payload = { region: values.get('region'), district: values.get('district'), area: Number(values.get('area')), building_type: values.get('building_type'), finishing: values.get('finishing'), structural_type: values.get('structural_type'), roofing_type: values.get('roofing_type'), land_owned: values.get('land_owned') === 'on', extras: values.getAll('extras') };
         try {
             const result = await apiRequest('/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            form.hidden = true; const resultPanel = document.querySelector('.estimate-result'); resultPanel.hidden = false; document.querySelector('[data-result-total]').textContent = money(result.itemized.total); document.querySelector('[data-result-confidence]').textContent = `${result.confidence.level} confidence · Estimate #${result.estimate_id}`;
+            const resultPanel = document.querySelector('.estimate-result');
+            resultPanel.hidden = false;
+            document.querySelector('[data-result-total]').textContent = money(result.itemized.total);
+            document.querySelector('[data-result-confidence]').textContent = `${result.confidence.level} confidence · Estimate #${result.estimate_id}`;
             let detail = resultPanel.querySelector('[data-result-detail]');
             if (!detail) { detail = document.createElement('div'); detail.dataset.resultDetail = 'true'; resultPanel.appendChild(detail); }
-            detail.innerHTML = `<p>${money(result.planning_range.low)} – ${money(result.planning_range.high)} planning range</p><p>${result.confidence.reason}</p><ul>${result.assumptions.map((assumption) => `<li>${assumption}</li>`).join('')}</ul>`;
+            detail.replaceChildren();
+            const range = document.createElement('p');
+            range.textContent = `${money(result.planning_range.low)} - ${money(result.planning_range.high)} planning range`;
+            const reason = document.createElement('p');
+            reason.textContent = result.confidence.reason;
+            const assumptions = document.createElement('ul');
+            (result.assumptions || []).forEach((assumption) => {
+                const item = document.createElement('li');
+                item.textContent = assumption;
+                assumptions.appendChild(item);
+            });
+            detail.append(range, reason, assumptions);
+            form.reset();
+            updateDistricts();
+            form.hidden = false;
+            button.disabled = false;
+            button.firstChild.textContent = 'Generate estimate';
+            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             await renderUserDashboard();
         } catch (error) { showError(error); button.disabled = false; button.firstChild.textContent = 'Generate estimate'; }
     });
-    document.querySelector('[data-new-estimate]')?.addEventListener('click', () => { form.reset(); form.hidden = false; document.querySelector('.estimate-result').hidden = true; });
+    document.querySelector('[data-new-estimate]')?.addEventListener('click', () => {
+        form.reset();
+        updateDistricts();
+        form.hidden = false;
+        document.querySelector('.estimate-result').hidden = true;
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 };
 
 const renderAdminDashboard = async () => {

@@ -1,4 +1,4 @@
-@import "../../node_modules/tailwindcss/dist/lib.d.mts";
+@import "tailwindcss";
 
 @theme {
     --font-display: "Space Grotesk", sans-serif;
@@ -427,6 +427,32 @@
     .estimate-item {
         @apply flex flex-wrap items-center justify-between gap-4 p-5;
         border-radius: 1rem;
+    }
+
+    .ai-insights {
+        @apply mt-8 grid gap-5 border-t pt-7;
+    }
+
+    .ai-insights h3 {
+        @apply mt-2 text-2xl font-bold;
+    }
+
+    .ai-summary {
+        @apply max-w-3xl text-sm leading-7;
+        color: var(--color-muted);
+    }
+
+    .ai-insight-group {
+        @apply grid gap-2;
+    }
+
+    .ai-insight-group strong {
+        color: var(--color-forest);
+    }
+
+    .ai-insight-group ul {
+        @apply m-0 grid gap-2 pl-5 text-sm leading-6;
+        color: var(--color-muted);
     }
 }
 

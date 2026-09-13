@@ -12,9 +12,18 @@ const resourceConfig = {
 
 const config = resourceConfig[resource];
 let referenceRegions = {};
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+}[character]));
 const request = async (path, options = {}) => {
     const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(options.headers || {}) } });
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { detail: text || 'Request failed.' }; }
     if (!response.ok) throw new Error(data.detail || 'Unable to complete that request.');
     return data;
 };
@@ -27,10 +36,10 @@ const renderForm = (record = {}) => {
     form.innerHTML = config.fields.map((field) => {
         const value = record[field.name] ?? '';
         const input = field.name === 'district'
-            ? `<select name="district" required><option value="">Select district</option>${(referenceRegions[record.region] || []).map((district) => `<option ${district === value ? 'selected' : ''}>${district}</option>`).join('')}</select>`
+            ? `<select name="district" required><option value="">Select district</option>${(referenceRegions[record.region] || []).map((district) => `<option ${district === value ? 'selected' : ''}>${escapeHtml(district)}</option>`).join('')}</select>`
             : field.type === 'select'
             ? `<select name="${field.name}" required><option value="">Select ${field.label.toLowerCase()}</option>${field.options.map((option) => `<option ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select>`
-            : `<input name="${field.name}" type="${field.type || 'text'}" ${field.step ? `step="${field.step}"` : ''} value="${value}" required placeholder="${field.placeholder || ''}">`;
+            : `<input name="${field.name}" type="${field.type || 'text'}" ${field.step ? `step="${field.step}"` : ''} value="${escapeHtml(value)}" required placeholder="${escapeHtml(field.placeholder || '')}">`;
         return `<label>${field.label}${input}</label>`;
     }).join('') + '<button class="button form-button" type="submit"><span data-submit-label>Save record</span><span aria-hidden="true">&#8594;</span></button>';
     document.querySelector('[data-form-title]').textContent = editingId ? `Edit ${config.singular}` : `Add ${config.singular}`;
@@ -47,7 +56,7 @@ const renderForm = (record = {}) => {
 const renderRecords = (records) => {
     document.querySelector('[data-record-count]').textContent = `${records.length} record${records.length === 1 ? '' : 's'}`;
     document.querySelector('[data-table-head]').innerHTML = config.columns.map(([, label]) => `<th>${label}</th>`).join('') + '<th>Actions</th>';
-    document.querySelector('[data-record-list]').innerHTML = records.length ? records.map((record) => `<tr>${config.columns.map(([key]) => `<td>${record[key] ?? '-'}</td>`).join('')}<td class="table-actions"><button type="button" data-edit="${record.id}">Edit</button><button type="button" data-delete="${record.id}">Delete</button></td></tr>`).join('') : `<tr><td colspan="${config.columns.length + 1}" class="empty-state">No records yet. Add the first one above.</td></tr>`;
+    document.querySelector('[data-record-list]').innerHTML = records.length ? records.map((record) => `<tr>${config.columns.map(([key]) => `<td>${escapeHtml(record[key] ?? '-')}</td>`).join('')}<td class="table-actions"><button type="button" data-edit="${record.id}">Edit</button><button type="button" data-delete="${record.id}">Delete</button></td></tr>`).join('') : `<tr><td colspan="${config.columns.length + 1}" class="empty-state">No records yet. Add the first one above.</td></tr>`;
     document.querySelectorAll('[data-edit]').forEach((button) => button.addEventListener('click', () => loadRecord(button.dataset.edit)));
     document.querySelectorAll('[data-delete]').forEach((button) => button.addEventListener('click', () => deleteRecord(button.dataset.delete)));
 };
